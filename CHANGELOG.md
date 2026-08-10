@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [0.1.2] — 2026-08-11
+
 ### Changed
 
 - Test suite leaner (~84→81 `Test*`, ~3.7k→3.5k hand-written test LOC): root wiring smoke replaces multi-domain RPC mega-test; merge tools/chat/image/video overlaps; domain packages keep sole RPC coverage (files get/delete/public URL, collections CRUD/search, etc.).
@@ -13,15 +15,12 @@
 - 完备公开 API 参考：`docs/API.md`（各包函数/类型/选项说明与引用）。
 - README 英文主文档 + 中文 [`README.zh-CN.md`](README.zh-CN.md)；页内语言切换。
 - CONTRIBUTING style section documents import groups, godoc, and error-handling expectations.
+- `docs/PROTO.md`: inventory of kept protos, omit reasons for embed/Sample RPC, regen notes for stale `*_grpc.pb.go`.
 
 ### Removed
 
 - **Embed proto/generated client surface** (`third_party/.../embed.proto`, `embed*.pb.go`) — product non-goal; unused by library packages.
 - **Sample RPC surface** — slimmed `sample.proto` to `FinishReason` only (still required by chat); removed `sample_grpc.pb.go` and unused SampleText messages.
-
-### Docs
-
-- `docs/PROTO.md`: inventory of kept protos, omit reasons for embed/Sample RPC, regen notes for stale `*_grpc.pb.go`.
 
 ## [0.1.1] — 2026-08-10
 
