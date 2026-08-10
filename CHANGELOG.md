@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- CI: bump golangci-lint to **v2.12.2** (built with Go 1.26) so lint works with `go 1.26` in `go.mod`. Older v2.1.x failed: "Go language version used to build golangci-lint is lower than the targeted Go version".
+
 ### Changed
 
 - **Versioning:** releases are **git tags only** (`vX.Y.Z`). `xai.Version()` reports the module version from the Go module graph (`runtime/debug`), or `devel` for untagged local trees.
