@@ -4,7 +4,7 @@
 
 - Go **1.26+**
 - Optional: `protoc`, `protoc-gen-go`, `protoc-gen-go-grpc` (proto regeneration only)
-- Optional: `golangci-lint` v1.64+ (or run `make lint` which uses `go run` when needed)
+- Optional: `golangci-lint` v2.x (or run `make lint` which uses `go run` when needed)
 
 ## Development
 

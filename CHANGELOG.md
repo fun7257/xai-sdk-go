@@ -11,6 +11,8 @@
 - Expanded `Makefile`: `test`, `vet`, `examples`, `race`, `lint`, `vuln`, `check`; portable proto includes.
 - Real bufconn tests for previously zero-coverage packages: `auth`, `models`, `tokenize`.
 - Library quality: `grpc.NewClient` dial path; Close errcheck on library I/O; package docs on domain clients.
+- Dependencies: `google.golang.org/grpc` → v1.82.1; OpenTelemetry → v1.43.0 (govulncheck clean on called symbols).
+- golangci-lint config for v2; CI action pin aligned.
 - CONTRIBUTING/README point at security, compatibility, and quality gates (no deleted plan docs as process).
 
 ### API / design docs
