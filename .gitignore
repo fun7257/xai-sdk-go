@@ -1,0 +1,40 @@
+# Binaries
+/bin/
+/dist/
+*.exe
+*.test
+*.out
+/xai-sdk-go
+
+# Coverage
+coverage.out
+coverage.html
+*.coverprofile
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Go
+vendor/
+go.work
+go.work.sum
+
+# Proto temp
+/tmp/
+*.pb.go.bak
+
+# Local tooling
+.grok/
