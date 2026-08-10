@@ -33,13 +33,13 @@ examples:
 race:
 	go test -race ./files/ ./collections/ ./chat/ ./internal/conn/ ./batch/
 
-# golangci-lint: use installed binary, or go run a pinned module.
+# golangci-lint: prefer installed binary (v2 config); fallback matches CI pin.
 lint:
 	@if command -v golangci-lint >/dev/null 2>&1; then \
 		golangci-lint run ./...; \
 	else \
-		echo "golangci-lint not installed; using go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8"; \
-		go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8 run ./...; \
+		echo "golangci-lint not installed; using go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6"; \
+		go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6 run ./...; \
 	fi
 
 vuln:

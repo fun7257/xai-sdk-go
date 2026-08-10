@@ -694,7 +694,7 @@ func (ch *Chat) Stream(ctx context.Context, opts ...CallOpt) (<-chan StreamEvent
 			errc <- err
 			return
 		}
-		defer sr.Close()
+		defer func() { _ = sr.Close() }()
 		for {
 			ev, err := sr.Recv()
 			if err == io.EOF {

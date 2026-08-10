@@ -1,31 +1,32 @@
+# Compatible with golangci-lint v1.64+ and v2 (version field required by v2).
+version: "2"
+
 run:
   timeout: 5m
   tests: true
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - errcheck
     - govet
     - ineffassign
     - staticcheck
     - unused
-
-linters-settings:
-  errcheck:
-    exclude-functions:
-      # Best-effort closes on defers in happy-path cleanup.
-      - (*os.File).Close
-      - io.Closer.Close
-
-issues:
-  exclude-dirs:
-    - xai/api
-    - third_party
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-    - path: examples/
-      linters:
-        - errcheck
+  settings:
+    errcheck:
+      exclude-functions:
+        # Best-effort closes on defers in happy-path cleanup.
+        - (*os.File).Close
+        - io.Closer.Close
+  exclusions:
+    paths:
+      - xai/api
+      - third_party
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+      - path: examples/
+        linters:
+          - errcheck
