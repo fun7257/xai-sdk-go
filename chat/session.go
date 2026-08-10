@@ -10,12 +10,11 @@ import (
 	"github.com/fun7257/xai-sdk-go/internal/poll"
 	"github.com/fun7257/xai-sdk-go/search"
 	"github.com/fun7257/xai-sdk-go/telemetry"
-	"google.golang.org/protobuf/proto"
 	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/protobuf/proto"
 )
-
 
 // Chat is a stateful multi-turn conversation.
 //
@@ -192,7 +191,6 @@ func includeToProto(s string) xaiv1.IncludeOption {
 		return xaiv1.IncludeOption_INCLUDE_OPTION_INVALID
 	}
 }
-
 
 // CallOpt configures a single Sample / Stream / Defer execution (count of completions).
 type CallOpt func(*callCfg)
@@ -519,7 +517,6 @@ func (ch *Chat) sampleN(ctx context.Context, n int32) ([]*Response, error) {
 	}
 	return wrapMultiResponses(pb, n), nil
 }
-
 
 // StreamEvent is one stream step.
 type StreamEvent struct {

@@ -1,11 +1,11 @@
 package files_test
 
 import (
-	"strings"
 	"context"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 

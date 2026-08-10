@@ -8,7 +8,7 @@ import (
 
 func TestMakeRequestClonesN(t *testing.T) {
 	ch := &Chat{req: &xaiv1.GetCompletionsRequest{
-		Model: "m",
+		Model:    "m",
 		Messages: []*xaiv1.Message{{Role: xaiv1.MessageRole_ROLE_USER, Content: []*xaiv1.Content{Text("hi")}}},
 	}}
 	r1, err := ch.makeRequest(2)

@@ -2,9 +2,9 @@ package chat_test
 
 import (
 	"context"
-	"strconv"
 	"encoding/json"
 	"io"
+	"strconv"
 	"testing"
 	"time"
 
@@ -340,8 +340,8 @@ func TestFileExactlyOneMode(t *testing.T) {
 
 type multiChat struct {
 	xaiv1.UnimplementedChatServer
-	lastN  *int32
-	lastRF *xaiv1.ResponseFormat
+	lastN     *int32
+	lastRF    *xaiv1.ResponseFormat
 	deferDone bool
 }
 

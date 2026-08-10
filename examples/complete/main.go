@@ -59,7 +59,7 @@ func main() {
 	// -------------------------------------------------------------------------
 	client, err := xai.NewClient(
 		// xai.WithAPIKey(os.Getenv("XAI_API_KEY")), // optional explicit / 可显式传入
-		xai.WithTimeout(3*time.Minute),
+		xai.WithTimeout(3 * time.Minute),
 	)
 	if err != nil {
 		log.Fatalf("NewClient: %v", err)
