@@ -43,15 +43,4 @@ func TestMessageFactories(t *testing.T) {
 	}
 }
 
-func TestUnsupportedContentPart(t *testing.T) {
-	_, err := chat.NewUser(123)
-	if err == nil {
-		t.Fatal("expected error for unsupported part")
-	}
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("User should panic on unsupported part")
-		}
-	}()
-	_ = chat.User(struct{}{})
-}
+// Unsupported-part error + panic paths: see message_panic_test.go.

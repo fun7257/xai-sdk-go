@@ -36,17 +36,18 @@ func TestNewClientErrNoAPIKeyFromEnv(t *testing.T) {
 	}
 }
 
-func TestDialErrEmptyAPIKey(t *testing.T) {
-	_, err := conn.Dial(t.Context(), "localhost:1", "", true, 0, nil, nil)
-	if err == nil {
-		t.Fatal("expected empty key error")
+func TestSentinelAliases(t *testing.T) {
+	// Public re-exports must be the same sentinel values (errors.Is works across packages).
+	if xai.ErrNoAPIKey != conn.ErrNoAPIKey {
+		t.Fatal("ErrNoAPIKey alias mismatch")
 	}
-	if !errors.Is(err, conn.ErrEmptyAPIKey) {
-		t.Fatalf("want ErrEmptyAPIKey, got %v", err)
+	if xai.ErrEmptyAPIKey != conn.ErrEmptyAPIKey {
+		t.Fatal("ErrEmptyAPIKey alias mismatch")
 	}
-	if !errors.Is(err, xai.ErrEmptyAPIKey) {
-		t.Fatalf("want xai.ErrEmptyAPIKey, got %v", err)
+	if xai.ErrNoManagementKey != collections.ErrNoManagementKey {
+		t.Fatal("ErrNoManagementKey alias mismatch")
 	}
+	// Dial empty key wrapping: internal/conn/conn_test.go TestDialEmptyKey
 }
 
 func TestCollectionsErrNoManagementKey(t *testing.T) {

@@ -2,7 +2,6 @@ package xai_test
 
 import (
 	"context"
-	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -222,11 +221,7 @@ func TestClientDomains(t *testing.T) {
 	}
 	defer srv.Close()
 
-	if _, err := xai.NewClient(xai.WithoutEnv()); err == nil {
-		t.Fatal("expected missing key error")
-	} else if !errors.Is(err, xai.ErrNoAPIKey) {
-		t.Fatalf("want ErrNoAPIKey, got %v", err)
-	}
+	// ErrNoAPIKey / ErrNoManagementKey: errors_test.go
 
 	cli, err := xai.NewClient(
 		xai.WithAPIKey("test-key"),
@@ -355,18 +350,7 @@ func TestClientDomains(t *testing.T) {
 		t.Fatal(err, doc)
 	}
 
-	cliNoMgmt, err := xai.NewClient(xai.WithAPIKey("k"), xai.WithAPIConn(srv.Conn), xai.WithoutEnv())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() { _ = cliNoMgmt.Close() }()
-	if _, err := cliNoMgmt.Collections.Create(ctx, "x"); err == nil {
-		t.Fatal("expected management key error")
-	} else if !errors.Is(err, xai.ErrNoManagementKey) {
-		t.Fatalf("want ErrNoManagementKey, got %v", err)
-	}
-
-	// pure local consumer path
+	// pure local consumer path (no RPC)
 	msg := chat.User("ping")
 	if msg.Content[0].GetText() != "ping" {
 		t.Fatal(msg)

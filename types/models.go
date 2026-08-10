@@ -2,6 +2,8 @@
 package types
 
 // Model name constants (any string is accepted by APIs).
+// Chat flagship: Grok 4.5 (docs.x.ai). Prefer ModelGrok45Latest for “always newest 4.5”.
+// Image/Video: Grok Imagine; video 1.5 is newer than base grok-imagine-video.
 const (
 	ModelGrok45                = "grok-4.5"
 	ModelGrok45Latest          = "grok-4.5-latest"
@@ -9,8 +11,10 @@ const (
 	ModelGrok3                 = "grok-3"
 	ModelImagineImage          = "grok-imagine-image"
 	ModelImagineImagePro       = "grok-imagine-image-pro"
+	ModelImagineImageQuality   = "grok-imagine-image-quality" // tool / higher-quality path in docs
 	ModelImagineVideo          = "grok-imagine-video"
-	ModelImagineVideo15Preview = "grok-imagine-video-1.5-preview"
+	ModelImagineVideo15        = "grok-imagine-video-1.5"
+	ModelImagineVideo15Preview = "grok-imagine-video-1.5-preview" // alias of 1.5 line
 )
 
 // ReasoningEffort values.

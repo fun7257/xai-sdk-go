@@ -9,20 +9,14 @@ import (
 )
 
 func TestFunctionAndServerTools(t *testing.T) {
+	// WebSearch/XSearch options + Unchecked: options_test.go
+	// Mutual exclusion tables: TestWebSearchMutualExclusion / TestXSearchMutualExclusion
 	fn, err := tools.Function("get_weather", "weather", map[string]any{
 		"type":       "object",
 		"properties": map[string]any{"city": map[string]any{"type": "string"}},
 	})
 	if err != nil || fn.GetFunction() == nil || fn.GetFunction().Name != "get_weather" {
 		t.Fatalf("%v %#v", err, fn)
-	}
-	ws, err := tools.WebSearch(tools.WithExcludedDomains("spam.com"))
-	if err != nil || ws.GetWebSearch() == nil {
-		t.Fatalf("web %v", err)
-	}
-	xs, err := tools.XSearch()
-	if err != nil || xs.GetXSearch() == nil {
-		t.Fatalf("x %v", err)
 	}
 	if tools.CodeExecution().GetCodeExecution() == nil {
 		t.Fatal("code")
@@ -38,7 +32,6 @@ func TestFunctionAndServerTools(t *testing.T) {
 		t.Fatal(tc.GetFunctionName())
 	}
 }
-
 func TestWebSearchMutualExclusion(t *testing.T) {
 	tests := []struct {
 		name    string
