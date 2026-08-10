@@ -19,7 +19,7 @@ Local equivalents: [`CONTRIBUTING.md`](../CONTRIBUTING.md) (`make check`, `race`
 |---------|-----|--------|
 | **pull_request** | PR head | Every PR; blocks merge when required in branch protection |
 | **push** `main` / `master` | Branch tip (**latest** code) | Same suite as PR |
-| **push** tags `v*` | Release tag (e.g. `v0.2.0`) | Suite runs on the tagged commit |
+| **push** tags `v*` | Release tag (e.g. `v0.1.0`) | Suite runs on the tagged commit |
 | **schedule** | Default branch | **Daily 02:00 UTC** — same offline test suite (regression) |
 | **workflow_dispatch** | Chosen ref | Manual re-run in Actions UI |
 
