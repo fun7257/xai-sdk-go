@@ -38,8 +38,8 @@ lint:
 	@if command -v golangci-lint >/dev/null 2>&1; then \
 		golangci-lint run ./...; \
 	else \
-		echo "golangci-lint not installed; using go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6"; \
-		go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6 run ./...; \
+		echo "golangci-lint not installed; using go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2"; \
+		go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run ./...; \
 	fi
 
 vuln:
