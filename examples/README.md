@@ -2,8 +2,12 @@
 
 All examples read credentials from the environment. **Never commit API keys.**
 
+**Complete bilingual guide / 中英双语完整指南:** [`docs/GUIDE.zh-en.md`](../docs/GUIDE.zh-en.md)  
+**Annotated end-to-end sample / 带参数注释的端到端示例:** [`complete/`](complete/)
+
 | Example | Capability | Env |
 |---------|------------|-----|
+| [`complete/`](complete/) | Full bilingual walkthrough (Sample + Stream + tools) | `XAI_API_KEY` |
 | [`smoke/`](smoke/) | Live multi-domain smoke | `XAI_API_KEY` |
 | [`chat/`](chat/) | Chat Sample | `XAI_API_KEY` |
 | [`stream/`](stream/) | StreamReader.Recv + Close | `XAI_API_KEY` |
