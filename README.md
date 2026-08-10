@@ -1,18 +1,25 @@
 # xAI Go SDK
 
-Idiomatic Go gRPC client for the [xAI API](https://docs.x.ai). **Go call UX first** — product capability without cloning Python API shapes.
+Idiomatic Go gRPC client for the [xAI API](https://docs.x.ai).  
+**Go call UX first** — product capability without cloning Python API shapes.
 
-- Design summary: [`docs/PARITY.md`](docs/PARITY.md)
-- Full Go vs Python differences: [`docs/DIFF.md`](docs/DIFF.md)
-- API stability (v0 / protobuf): [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md)
-- Security reporting: [`docs/SECURITY.md`](docs/SECURITY.md)
-- Proto residual: [`docs/PROTO.md`](docs/PROTO.md)
-- OSS roadmap: [`docs/ROADMAP_OSS.md`](docs/ROADMAP_OSS.md)
-- Release checklist: [`docs/RELEASE.md`](docs/RELEASE.md)
-- **Complete bilingual usage guide / 中英双语完整调用指南:** [`docs/GUIDE.zh-en.md`](docs/GUIDE.zh-en.md)
-- Annotated example / 带注释示例: [`examples/complete/`](examples/complete/)
+**Module:** `github.com/fun7257/xai-sdk-go` · **Go:** 1.26+ · **License:** Apache-2.0 · **Version:** `xai.Version` (`0.2.0`)
 
-**Module:** `github.com/fun7257/xai-sdk-go` · **Go:** 1.26+ · **License:** Apache-2.0
+---
+
+## Documentation map
+
+| Role | Start here | Details |
+|------|------------|---------|
+| **New user** | [Install & quick start](#install) below | Full params (EN+中文): [`docs/GUIDE.zh-en.md`](docs/GUIDE.zh-en.md) · Runnable: [`examples/complete/`](examples/complete/) |
+| **API design** | [`docs/PARITY.md`](docs/PARITY.md) (principles + preferred shapes) | Domain vs Python: [`docs/DIFF.md`](docs/DIFF.md) |
+| **Stability / pb** | [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md) | Residual protos: [`docs/PROTO.md`](docs/PROTO.md) |
+| **Security** | [`docs/SECURITY.md`](docs/SECURITY.md) | — |
+| **Contributor** | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Examples index: [`examples/README.md`](examples/README.md) |
+| **Maintainer** | [`docs/RELEASE.md`](docs/RELEASE.md) | OSS maturity (done): [`docs/ROADMAP_OSS.md`](docs/ROADMAP_OSS.md) |
+| **Changelog** | [`CHANGELOG.md`](CHANGELOG.md) | — |
+
+---
 
 ## Install
 
@@ -20,14 +27,18 @@ Idiomatic Go gRPC client for the [xAI API](https://docs.x.ai). **Go call UX firs
 go get github.com/fun7257/xai-sdk-go
 ```
 
-## Auth
+### Credentials
 
 | Key | Env | Option | Used for |
 |-----|-----|--------|----------|
-| Business API key | `XAI_API_KEY` | `WithAPIKey` | Chat, Image, Video, Files, Batch, Models, Tokenize, Auth, Documents search |
-| Management API key | `XAI_MANAGEMENT_KEY` | `WithManagementAPIKey` | Collections CRUD / indexing |
+| Business | `XAI_API_KEY` | `WithAPIKey` | Chat, Image, Video, Files, Batch, Models, Tokenize, Auth, search |
+| Management | `XAI_MANAGEMENT_KEY` | `WithManagementAPIKey` | Collections CRUD / indexing |
 
-Every RPC sends `authorization: Bearer <key>`. Optional `WithInsecure()` for local dial (Bearer still attached).
+RPCs send `authorization: Bearer <key>`. Prefer env vars; never commit secrets.  
+Sentinels: `ErrNoAPIKey`, `ErrEmptyAPIKey`, `ErrNoManagementKey` (`errors.Is`).  
+Full option tables → [`docs/GUIDE.zh-en.md`](docs/GUIDE.zh-en.md).
+
+---
 
 ## Quick start
 
@@ -44,7 +55,7 @@ import (
 )
 
 func main() {
-	client, err := xai.NewClient() // reads XAI_API_KEY
+	client, err := xai.NewClient() // XAI_API_KEY
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,128 +71,43 @@ func main() {
 }
 ```
 
-Streaming (primary DX):
+**Preferred shapes** (see [`docs/PARITY.md`](docs/PARITY.md)):
 
-```go
-sr, err := c.StreamReader(ctx) // optional: chat.WithN(k)
-if err != nil {
-	log.Fatal(err)
-}
-defer sr.Close()
-for {
-	ev, err := sr.Recv()
-	if err == io.EOF {
-		break
-	}
-	// use ev.Chunk / ev.Response
-}
+| Goal | API |
+|------|-----|
+| One completion | `Sample(ctx)` |
+| Multi | `Samples(ctx, chat.WithN(k))` — never silent drop |
+| Stream | `StreamReader` + `Recv` / `Close` |
+| Tools | `tools.WebSearch(...)` → `(*Tool, error)` |
+
+```bash
+export XAI_API_KEY=xai-...
+go run ./examples/complete   # annotated end-to-end
 ```
 
-Multi-completion:
-
-```go
-// chat
-resps, err := c.Samples(ctx, chat.WithN(3))
-// image
-imgs, err := client.Image.Samples(ctx, "a cat", "grok-imagine-image", image.WithN(2))
-```
-
-Tools validate on construct:
-
-```go
-web, err := tools.WebSearch(tools.WithAllowedDomains("example.com"))
-// illegal allowed+excluded → error
-```
+---
 
 ## Domains
 
-| Domain | Package / field | Notes |
-|--------|-----------------|-------|
-| Auth | `client.Auth` | API key info |
-| Chat | `client.Chat` | Sample, StreamReader, Parse, Defer, stored, compact |
-| Image | `client.Image` | file_id + storage options |
-| Video | `client.Video` | Generate/Extend + poll |
-| Files | `client.Files` | chunked upload, list filter/sort, public URL |
-| Batch | `client.Batch` | typed `batch.Result` |
-| Collections | `client.Collections` | management key; UploadDocument |
-| Models | `client.Models` | language / image gen models |
-| Tokenize | `client.Tokenize` | TokenizeText |
+| Field | Package | Notes |
+|-------|---------|-------|
+| `Auth` | `auth` | API key info |
+| `Chat` | `chat` | Sample, StreamReader, Parse, Defer, stored, compact |
+| `Image` / `Video` | `image` / `video` | Gen + poll; file_id / storage where applicable |
+| `Files` | `files` | Upload, list, public URL, `ContentWriter` |
+| `Batch` | `batch` | Typed `batch.Result` |
+| `Collections` | `collections` | Management key for CRUD |
+| `Models` / `Tokenize` | `models` / `tokenize` | Metadata / tokenize |
+| — | `tools`, `search`, `telemetry`, `types` | Tools, live search, opt-in OTEL, constants |
 
-## Capability matrix (high level)
+**Out of scope:** Embed client, OpenAI REST, OAuth, aio dual stack.
 
-| Capability | Status |
-|------------|--------|
-| Chat multi-turn Sample/Stream | yes |
-| Tools (server + function) | yes |
-| Structured Parse | yes |
-| Deferred / stored / compact | yes |
-| Image + Video gen | yes |
-| Files + public URL | yes |
-| Batch typed results | yes |
-| Collections RAG | yes (management key) |
-| OTEL telemetry | opt-in (`telemetry.Setup`) |
-| Embed client | **out of scope** |
-| OpenAI REST | **out of scope** |
+**Telemetry (opt-in):** `telemetry.Setup(...)`. Disable: `XAI_SDK_DISABLE_TRACING=1`.
 
-## Differences from Python SDKs (by design)
+---
 
-| Topic | Go choice |
-|-------|-----------|
-| Concurrency | One client + `context` / goroutines (no aio dual stack) |
-| Config | Functional options |
-| Multi results | `Samples` / `WithN` — never silent single-index drop |
-| Validation | Primary constructors return `error` on illegal combos |
-| Responses | Explicit methods + `Proto()` escape hatch |
-| Telemetry | Opt-in `telemetry.Setup` |
+## Develop & release
 
-## Examples
-
-See [`examples/README.md`](examples/README.md). Live smoke:
-
-```bash
-export XAI_API_KEY=xai-...
-go run ./examples/smoke
-SMOKE_SKIP_VIDEO=1 go run ./examples/smoke
-```
-
-## Tests and quality gates
-
-```bash
-make check   # vet + test + examples build (offline)
-make race    # race on concurrent packages
-make lint    # golangci-lint
-make vuln    # govulncheck
-```
-
-CI runs the same offline gates (see `.github/workflows/ci.yaml`).
-
-Optional live smoke (skips without `XAI_API_KEY`; not required for PRs):
-
-```bash
-export XAI_API_KEY=xai-...
-make integration
-```
-
-## Proto
-
-Generated from [xai-org/xai-proto](https://github.com/xai-org/xai-proto) under `third_party/`, plus residual synthesized fields for storage/file_id/public URL/collections. Details: [`docs/PROTO.md`](docs/PROTO.md).
-
-```bash
-make proto
-```
-
-## Telemetry
-
-```go
-import "github.com/fun7257/xai-sdk-go/telemetry"
-
-telemetry.Setup(telemetry.SetupOptions{}) // uses otel.GetTracerProvider()
-// or pass TracerProvider in SetupOptions
-```
-
-Disable: `XAI_SDK_DISABLE_TRACING=1`  
-Omit sensitive attributes: `XAI_SDK_DISABLE_SENSITIVE_TELEMETRY_ATTRIBUTES=1`
-
-## Contributing
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md). Stability and security: [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md), [`docs/SECURITY.md`](docs/SECURITY.md).
+Offline gates and PR process: **[`CONTRIBUTING.md`](CONTRIBUTING.md)** (`make check`, lint, vuln, race).  
+Ship tags / version source of truth: **[`docs/RELEASE.md`](docs/RELEASE.md)** (`xai.Version` only).  
+Report vulnerabilities: **[`docs/SECURITY.md`](docs/SECURITY.md)**.
