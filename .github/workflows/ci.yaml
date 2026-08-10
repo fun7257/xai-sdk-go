@@ -54,7 +54,7 @@ jobs:
         run: go build -o /dev/null ./examples/...
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v7
+        uses: golangci/golangci-lint-action@v9
         with:
           # Must be built with Go >= go.mod (1.26); v2.1.x is go1.24 and fails.
           version: v2.12.2
