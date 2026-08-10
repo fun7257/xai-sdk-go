@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a problem with the Go SDK
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Do **not** include API keys or secrets.
+        Security issues: see [SECURITY.md](../docs/SECURITY.md) (private disclosure).
+
+  - type: input
+    id: version
+    attributes:
+      label: SDK version
+      description: Module version or commit (`xai.Version` / `go list -m`)
+      placeholder: "v0.2.0"
+    validations:
+      required: true
+
+  - type: input
+    id: go-version
+    attributes:
+      label: Go version
+      placeholder: "go1.26.x"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Expected vs actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: Smallest code snippet (no secrets). Prefer offline mock if possible.
+      render: go
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / error text
+      render: shell
+    validations:
+      required: false

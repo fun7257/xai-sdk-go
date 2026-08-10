@@ -18,7 +18,21 @@ make vuln      # govulncheck
 gofmt -w $(find . -name '*.go' -not -path './xai/api/v1/*')
 ```
 
-These targets mirror CI (`.github/workflows/ci.yaml`).
+These targets mirror default CI (`.github/workflows/ci.yaml`).
+
+### Optional live integration
+
+Live API smoke is **not** part of `make test` / default CI. It uses build tag
+`integration` and skips without `XAI_API_KEY`:
+
+```bash
+export XAI_API_KEY=xai-...
+make integration
+# or: go test -tags=integration ./integration/ -count=1 -v
+```
+
+A secrets-gated workflow (`.github/workflows/integration.yml`) runs only when
+`XAI_API_KEY` is configured as a repository secret. See [`docs/RELEASE.md`](docs/RELEASE.md).
 
 ## Proto generation
 
@@ -51,6 +65,11 @@ Do not hand-edit `xai/api/v1/*.pb.go`. Residual synthesized fields are documente
 
 See [`docs/SECURITY.md`](docs/SECURITY.md). Never commit `.env`, keys, or tokens.
 Examples must read `XAI_API_KEY` / `XAI_MANAGEMENT_KEY` from the environment.
+
+## Release
+
+Maintainers: follow [`docs/RELEASE.md`](docs/RELEASE.md). Public version is only
+`xai.Version` in `version.go`.
 
 ## License
 

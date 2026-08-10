@@ -1,0 +1,12 @@
+# Default owners for this module (GitHub username matching module path fun7257).
+# Adjust when a team is available.
+*       @fun7257
+
+# Generated protobuf — still review via default owner; do not hand-edit.
+/xai/api/          @fun7257
+/third_party/      @fun7257
+
+# CI and release surface
+/.github/          @fun7257
+/Makefile          @fun7257
+/docs/RELEASE.md   @fun7257

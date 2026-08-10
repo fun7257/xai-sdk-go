@@ -54,3 +54,9 @@ make race    # scoped race on concurrent packages
 ```
 
 See `Makefile` and `.github/workflows/ci.yaml`.
+
+## Version and releases
+
+- Public version constant: **`xai.Version`** only (`version.go`).
+- Wire metadata uses the same value via package `init` → `conn.SDKVersion`.
+- Maintainer release steps: [`RELEASE.md`](RELEASE.md).

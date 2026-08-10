@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/fun7257/xai-sdk-go/security/advisories/new
+    about: Do not file public issues for security reports; use private advisories when available (see docs/SECURITY.md).
