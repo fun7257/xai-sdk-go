@@ -23,12 +23,12 @@ var (
 // Version returns this library's module version as resolved by the Go toolchain.
 //
 // When consumers install a release with a git tag (for example
-// `go get github.com/fun7257/xai-sdk-go@v0.2.0`), this returns that version
+// `go get github.com/fun7257/xai-sdk-go@v0.1.0`), this returns that version
 // without inventing a second versioning scheme in-repo. Untagged local trees
 // and pure development builds return "devel".
 //
 // The leading "v" from module versions is stripped for wire/display consistency
-// (e.g. "v0.2.0" → "0.2.0"). The value is also used as gRPC metadata
+// (e.g. "v0.1.0" → "0.1.0"). The value is also used as gRPC metadata
 // xai-sdk-version: go/<Version>.
 func Version() string {
 	versionOnce.Do(func() {

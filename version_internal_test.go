@@ -6,7 +6,7 @@ func TestNormalizeModuleVersion(t *testing.T) {
 	cases := map[string]string{
 		"":         "devel",
 		"(devel)":  "devel",
-		"v0.2.0":   "0.2.0",
+		"v0.1.0":   "0.1.0",
 		"0.3.1":    "0.3.1",
 		" v1.0.0 ": "1.0.0",
 	}
