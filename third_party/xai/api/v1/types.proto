@@ -1,0 +1,22 @@
+syntax = "proto3";
+package xai_api;
+option go_package = "github.com/fun7257/xai-sdk-go/xai/api/v1;xaiv1";
+
+enum HNSWMetric {
+  HNSW_METRIC_UNKNOWN = 0;
+  HNSW_METRIC_COSINE = 1;
+  HNSW_METRIC_EUCLIDEAN = 2;
+  HNSW_METRIC_INNER_PRODUCT = 3;
+}
+
+message IndexConfiguration { string model_name = 1; }
+message CharsConfiguration { int32 max_chunk_size_chars = 1; int32 chunk_overlap_chars = 2; }
+message TokensConfiguration { int32 max_chunk_size_tokens = 1; int32 chunk_overlap_tokens = 2; string encoding_name = 3; }
+message BytesConfiguration { int32 max_chunk_size_bytes = 1; int32 chunk_overlap_bytes = 2; }
+message ChunkConfiguration {
+  CharsConfiguration chars_configuration = 1;
+  TokensConfiguration tokens_configuration = 2;
+  BytesConfiguration bytes_configuration = 3;
+  bool strip_whitespace = 4;
+  bool inject_name_into_chunks = 5;
+}

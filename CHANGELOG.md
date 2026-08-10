@@ -1,0 +1,45 @@
+# Changelog
+
+## Unreleased
+
+### Open-source hygiene (senior SDK floor)
+
+- Added `docs/SECURITY.md` (vulnerability reporting + consumer notes).
+- Added `docs/COMPATIBILITY.md` (v0 semver policy, public surface, protobuf contract).
+- Added `docs/ROADMAP_OSS.md` (P0–P2 remediation plan).
+- Expanded CI (`.github/workflows/ci.yaml`): vet, test, scoped race, examples build, golangci-lint, govulncheck.
+- Expanded `Makefile`: `test`, `vet`, `examples`, `race`, `lint`, `vuln`, `check`; portable proto includes.
+- Real bufconn tests for previously zero-coverage packages: `auth`, `models`, `tokenize`.
+- Library quality: `grpc.NewClient` dial path; Close errcheck on library I/O; package docs on domain clients.
+- CONTRIBUTING/README point at security, compatibility, and quality gates (no deleted plan docs as process).
+
+### API / design docs
+
+- Comprehensive Go vs Python difference guide: `docs/DIFF.md`.
+- Go-first public API: `Samples`/`WithN`, `Defers`/`WithDeferN`, StreamReader/Stream + `WithN`; tools/search validate on primary path (`Unchecked*` escape hatches).
+- Code polish: request clone for chat `makeRequest`, `ContentWriter`, `WithDeleteOnAddFailure`, `Stream + WithN`, index-scoped `ToolOutputs`.
+
+## [0.2.0] — 2026-08-10
+
+Product-depth release for the Go gRPC client (chat, image, video, files, batch,
+collections, models, tokenize, auth, opt-in telemetry).
+
+### Added
+
+- Files: `WithListFilter`, `WithListSortBy`, `BatchUploadWithOptions` + per-file callback.
+- Image: `WithImageFileID` / `WithImageFileIDs`, storage options, FileOutput/PublicURL accessors, `Download`.
+- Video: file_id inputs, storage wire-up, extend + poll tests.
+- Collections: `UploadDocument`, list/search options, retrieval_mode, chunk validation, field helpers.
+- Batch: typed `Result` (`Succeeded`/`Failed`, Chat/Image/Video accessors), `GetBatchRequestResult`.
+- Chat: `StreamReader.Recv`, response format options, deferred multi-completion shapes.
+- Tools: WebSearch/XSearch validation on primary path; CollectionsSearch retrieval_mode.
+- Telemetry: opt-in OTEL `Setup`; env disable flags.
+- Examples under `examples/`; design docs `docs/PARITY.md`, `docs/DIFF.md`, `docs/PROTO.md`.
+
+### Proto
+
+- Baseline from [xai-org/xai-proto](https://github.com/xai-org/xai-proto); residual fields documented in `docs/PROTO.md`.
+
+## [0.1.0] — preview
+
+- Initial gRPC SDK surface: Client, Chat, Image, Video, Files, Batch, Collections, Models, Tokenize, Auth.
