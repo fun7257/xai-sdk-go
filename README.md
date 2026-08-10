@@ -1,42 +1,45 @@
 # xAI Go SDK
 
-Idiomatic Go gRPC client for the [xAI API](https://docs.x.ai).  
-**Go call UX first** — product capability without cloning Python API shapes.
+[xAI API](https://docs.x.ai) 的惯用 Go gRPC 客户端。**优先 Go 调用体验**，对齐产品能力，而非克隆 Python API 形态。
 
-**Module:** `github.com/fun7257/xai-sdk-go` · **Go:** 1.26+ · **License:** Apache-2.0 · **Release:** git tags (`vX.Y.Z`); runtime `xai.Version()`
+| | |
+|--|--|
+| **Module** | [`github.com/fun7257/xai-sdk-go`](https://pkg.go.dev/github.com/fun7257/xai-sdk-go) |
+| **Go** | 1.26+ |
+| **License** | Apache-2.0 |
+| **Release** | Git tags `vX.Y.Z` · 开发 tip：`@dev` |
+
 ---
 
-## Documentation map
+## Contents
 
-| Role | Start here | Details |
-|------|------------|---------|
-| **New user** | [Install & quick start](#install) below | Full params (EN+中文): [`docs/GUIDE.zh-en.md`](docs/GUIDE.zh-en.md) · Runnable: [`examples/complete/`](examples/complete/) |
-| **API 参考** | [`docs/API.md`](docs/API.md)（包/函数完备说明） | `go doc` / pkg.go.dev |
-| **API design** | [`docs/PARITY.md`](docs/PARITY.md) (principles + preferred shapes) | Domain vs Python: [`docs/DIFF.md`](docs/DIFF.md) |
-| **Stability / pb** | [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md) | Residual protos: [`docs/PROTO.md`](docs/PROTO.md) |
-| **Security** | [`docs/SECURITY.md`](docs/SECURITY.md) | — |
-| **Contributor** | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Examples index: [`examples/README.md`](examples/README.md) |
-| **Maintainer** | [`docs/RELEASE.md`](docs/RELEASE.md) | CI triggers / `dev` tag: [`docs/CI.md`](docs/CI.md) · OSS status: [`docs/ROADMAP_OSS.md`](docs/ROADMAP_OSS.md) |
-| **Changelog** | [`CHANGELOG.md`](CHANGELOG.md) | — |
+1. [Install](#install)
+2. [Quick start](#quick-start)
+3. [Core patterns](#core-patterns)
+4. [Packages](#packages)
+5. [Documentation](#documentation)
+6. [Examples](#examples)
+7. [Versioning & CI](#versioning--ci)
+8. [Contributing](#contributing)
 
 ---
 
 ## Install
 
 ```bash
-go get github.com/fun7257/xai-sdk-go
+go get github.com/fun7257/xai-sdk-go@v0.1.1   # pin a release
+# go get github.com/fun7257/xai-sdk-go@dev    # latest green main (mutable)
 ```
 
 ### Credentials
 
-| Key | Env | Option | Used for |
-|-----|-----|--------|----------|
+| Key | Environment | Option | Scope |
+|-----|-------------|--------|--------|
 | Business | `XAI_API_KEY` | `WithAPIKey` | Chat, Image, Video, Files, Batch, Models, Tokenize, Auth, search |
 | Management | `XAI_MANAGEMENT_KEY` | `WithManagementAPIKey` | Collections CRUD / indexing |
 
-RPCs send `authorization: Bearer <key>`. Prefer env vars; never commit secrets.  
-Sentinels: `ErrNoAPIKey`, `ErrEmptyAPIKey`, `ErrNoManagementKey` (`errors.Is`).  
-Full option tables → [`docs/GUIDE.zh-en.md`](docs/GUIDE.zh-en.md).
+RPC 使用 `Authorization: Bearer <key>`。密钥走环境变量，勿提交仓库。  
+可判定错误：`ErrNoAPIKey` · `ErrEmptyAPIKey` · `ErrNoManagementKey`（`errors.Is`）。
 
 ---
 
@@ -52,16 +55,19 @@ import (
 
 	xai "github.com/fun7257/xai-sdk-go"
 	"github.com/fun7257/xai-sdk-go/chat"
+	"github.com/fun7257/xai-sdk-go/types"
 )
 
 func main() {
-	client, err := xai.NewClient() // XAI_API_KEY
+	client, err := xai.NewClient() // reads XAI_API_KEY
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer client.Close()
 
-	c := client.Chat.Create("grok-3", chat.WithMessages(chat.System("You are helpful.")))
+	c := client.Chat.Create(types.ModelGrok45Latest,
+		chat.WithMessages(chat.System("You are helpful.")),
+	)
 	_ = c.Append(chat.User("Hello!"))
 	resp, err := c.Sample(context.Background())
 	if err != nil {
@@ -71,51 +77,97 @@ func main() {
 }
 ```
 
-**Preferred shapes** (see [`docs/PARITY.md`](docs/PARITY.md)):
-
-| Goal | API |
-|------|-----|
-| One completion | `Sample(ctx)` |
-| Multi | `Samples(ctx, chat.WithN(k))` — never silent drop |
-| Stream | `StreamReader` + `Recv` / `Close` |
-| Tools | `tools.WebSearch(...)` → `(*Tool, error)` |
-
 ```bash
 export XAI_API_KEY=xai-...
-go run ./examples/complete   # annotated end-to-end
+go run ./examples/complete   # 中英注释端到端示例
 ```
 
 ---
 
-## Domains
+## Core patterns
 
-| Field | Package | Notes |
-|-------|---------|-------|
-| `Auth` | `auth` | API key info |
-| `Chat` | `chat` | Sample, StreamReader, Parse, Defer, stored, compact |
-| `Image` / `Video` | `image` / `video` | Gen + poll; file_id / storage where applicable |
-| `Files` | `files` | Upload, list, public URL, `ContentWriter` |
-| `Batch` | `batch` | Typed `batch.Result` |
-| `Collections` | `collections` | Management key for CRUD |
-| `Models` / `Tokenize` | `models` / `tokenize` | Metadata / tokenize |
-| — | `tools`, `search`, `telemetry`, `types` | Tools, live search, opt-in OTEL, constants |
+| Goal | Prefer | Notes |
+|------|--------|--------|
+| 单次补全 | `Sample(ctx)` | `n>1` 请用 `Samples` |
+| 多次补全 | `Samples(ctx, chat.WithN(k))` | 不静默丢弃结果 |
+| 流式 | `StreamReader` → `Recv` / `Close` | 务必 `Close` |
+| 结构化 | `Parse(ctx, schema, &dest)` | JSON Schema |
+| 工具 | `tools.WebSearch(...)` → `(*Tool, error)` | 主路径校验；`Unchecked*` 为逃生舱 |
+| 图像 / 视频 | `Image.Sample` · `Video.Generate` | 多图用 `Samples` + `WithN` |
 
-**Out of scope:** Embed client, OpenAI REST, OAuth, aio dual stack.
-
-**Telemetry (opt-in):** `telemetry.Setup(...)`. Disable: `XAI_SDK_DISABLE_TRACING=1`.
+设计原则与完整形态表 → [`docs/PARITY.md`](docs/PARITY.md)。
 
 ---
 
-## Develop & release
+## Packages
 
-| Topic | Doc |
-|-------|-----|
-| Offline gates (local) | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
-| **CI mode** (PR / main / **`v*` tags** / **daily tests** / floating **`dev`**) | [`docs/CI.md`](docs/CI.md) |
-| Release tags + `dev` channel | [`docs/RELEASE.md`](docs/RELEASE.md) |
-| Security | [`docs/SECURITY.md`](docs/SECURITY.md) |
+通过 `client.<Field>` 访问（或各包 `New`）：
+
+| Field | Package | Capability |
+|-------|---------|------------|
+| `Chat` | [`chat`](docs/API.md#3-chat) | 多轮、流式、工具、Defer、Parse、存储/压缩 |
+| `Image` / `Video` | `image` / `video` | 生成、延长、轮询、存储选项 |
+| `Files` | `files` | 上传、列表、公开 URL、大文件 `ContentWriter` |
+| `Batch` | `batch` | 批任务 + 类型化 `Result` |
+| `Collections` | `collections` | 集合/文档/检索（CRUD 需 management key） |
+| `Auth` / `Models` / `Tokenize` | 同名包 | 密钥信息、模型目录、分词 |
+| — | `tools` · `search` · `telemetry` · `types` | 工具、Live Search、可选 OTEL、常量 |
+
+**非目标：** Embed 客户端 · OpenAI REST · OAuth · aio 双栈。
+
+Telemetry（可选）：`telemetry.Setup(...)` · 关闭：`XAI_SDK_DISABLE_TRACING=1`。
+
+---
+
+## Documentation
+
+| 你想… | 打开 |
+|--------|------|
+| **函数/类型完备说明** | [`docs/API.md`](docs/API.md) |
+| **参数表（中英）+ 完整调用** | [`docs/GUIDE.zh-en.md`](docs/GUIDE.zh-en.md) |
+| **设计原则 / 推荐 API** | [`docs/PARITY.md`](docs/PARITY.md) |
+| **与 Python SDK 差异** | [`docs/DIFF.md`](docs/DIFF.md) |
+| **稳定性 / protobuf 策略** | [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md) · [`docs/PROTO.md`](docs/PROTO.md) |
+| **安全披露** | [`docs/SECURITY.md`](docs/SECURITY.md) |
+| **发版 / CI / 开发 tip** | [`docs/RELEASE.md`](docs/RELEASE.md) · [`docs/CI.md`](docs/CI.md) |
+| **变更记录** | [`CHANGELOG.md`](CHANGELOG.md) |
+
+命令行：`go doc github.com/fun7257/xai-sdk-go/...`
+
+---
+
+## Examples
+
+| 路径 | 说明 |
+|------|------|
+| [`examples/complete`](examples/complete/) | 带参数注释的端到端（推荐先看） |
+| [`examples/README.md`](examples/README.md) | 全目录索引（chat / stream / image / …） |
+| [`examples/smoke`](examples/smoke/) | 真网低成本冒烟 |
 
 ```bash
-go get github.com/fun7257/xai-sdk-go@vX.Y.Z   # release (immutable)
-go get github.com/fun7257/xai-sdk-go@dev      # latest green main (overwritten)
+export XAI_API_KEY=xai-...
+go run ./examples/chat
+go build ./examples/...
+```
+
+---
+
+## Versioning & CI
+
+- **正式版：** 不可变 git tag → `go get …@vX.Y.Z`
+- **开发 tip：** 浮动 tag `dev`（main CI 全绿后覆盖）→ `go get …@dev`
+- **CI：** PR / main / `v*` tag / 每日离线套件；可选真网 integration  
+  细节 → [`docs/CI.md`](docs/CI.md)
+
+运行时版本字符串：`xai.Version()`（来自模块图，非手写常量）。
+
+---
+
+## Contributing
+
+见 [`CONTRIBUTING.md`](CONTRIBUTING.md)（`make check` / lint / race / vuln）。  
+问题与安全：Issue 模板 · [`docs/SECURITY.md`](docs/SECURITY.md)。
+
+```bash
+make check && make race && make lint
 ```

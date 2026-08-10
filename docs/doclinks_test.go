@@ -73,7 +73,7 @@ func TestProjectMarkdownLinksResolve(t *testing.T) {
 	}
 }
 
-// README must expose a role-oriented documentation map for core reader paths.
+// README must expose progressive structure and links for core reader paths.
 func TestREADMEDocMapCoversCoreRoles(t *testing.T) {
 	root := findModuleRoot(t)
 	data, err := os.ReadFile(filepath.Join(root, "README.md"))
@@ -82,7 +82,10 @@ func TestREADMEDocMapCoversCoreRoles(t *testing.T) {
 	}
 	s := string(data)
 	needles := []string{
-		"Documentation map",
+		"## Contents",
+		"## Install",
+		"## Quick start",
+		"## Documentation",
 		"docs/GUIDE.zh-en.md",
 		"docs/API.md",
 		"docs/PARITY.md",
