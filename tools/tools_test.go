@@ -8,30 +8,8 @@ import (
 	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
 )
 
-func TestFunctionAndServerTools(t *testing.T) {
-	// WebSearch/XSearch options + Unchecked: options_test.go
-	// Mutual exclusion tables: TestWebSearchMutualExclusion / TestXSearchMutualExclusion
-	fn, err := tools.Function("get_weather", "weather", map[string]any{
-		"type":       "object",
-		"properties": map[string]any{"city": map[string]any{"type": "string"}},
-	})
-	if err != nil || fn.GetFunction() == nil || fn.GetFunction().Name != "get_weather" {
-		t.Fatalf("%v %#v", err, fn)
-	}
-	if tools.CodeExecution().GetCodeExecution() == nil {
-		t.Fatal("code")
-	}
-	if tools.CollectionsSearch([]string{"c1"}, nil, "").GetCollectionsSearch() == nil {
-		t.Fatal("collections")
-	}
-	if tools.MCP("https://example.com/mcp", tools.WithMCPLabel("lab")).GetMcp() == nil {
-		t.Fatal("mcp")
-	}
-	tc := tools.RequiredTool("get_weather")
-	if tc.GetFunctionName() != "get_weather" {
-		t.Fatal(tc.GetFunctionName())
-	}
-}
+// Option builders, Function/Mode/CallType, Unchecked/legacy aliases: options_test.go
+
 func TestWebSearchMutualExclusion(t *testing.T) {
 	tests := []struct {
 		name    string

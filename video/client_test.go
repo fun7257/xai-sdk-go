@@ -165,6 +165,11 @@ func TestMutualExclusionAndExtend(t *testing.T) {
 		t.Fatal("expected extend requires video")
 	}
 
+	// Zero Response defaults RespectModeration to true (no video payload).
+	if !(&video.Response{}).RespectModeration() {
+		t.Fatal("expected default RespectModeration true on empty Response")
+	}
+
 	mock := &mockVideo{}
 	srv, err := testutil.Start(func(s *grpc.Server) { xaiv1.RegisterVideoServer(s, mock) })
 	if err != nil {
@@ -172,6 +177,19 @@ func TestMutualExclusionAndExtend(t *testing.T) {
 	}
 	defer srv.Close()
 	cli = video.New(srv.Conn)
+
+	// ExtendStart returns request id without polling.
+	id, err := cli.ExtendStart(context.Background(), "continue", "m", "https://v.example/in.mp4")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id != "req_ext" {
+		t.Fatalf("id=%q", id)
+	}
+	if mock.lastExt == nil || mock.lastExt.GetVideo().GetUrl() != "https://v.example/in.mp4" {
+		t.Fatalf("extend start wire=%v", mock.lastExt)
+	}
+
 	_, err = cli.ExtendWith(context.Background(), "continue", "m", "", "file_vid",
 		video.WithPollInterval(time.Millisecond),
 		video.WithPollTimeout(time.Second),
@@ -186,42 +204,4 @@ func TestMutualExclusionAndExtend(t *testing.T) {
 	if mock.lastExt.StorageOptions == nil {
 		t.Fatal("expected storage on extend")
 	}
-}
-
-func TestExtendStartReturnsID(t *testing.T) {
-	mock := &extendStartMock{}
-	srv, err := testutil.Start(func(s *grpc.Server) { xaiv1.RegisterVideoServer(s, mock) })
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer srv.Close()
-	cli := video.New(srv.Conn)
-	id, err := cli.ExtendStart(context.Background(), "continue", "m", "https://v.example/in.mp4")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if id != "ext-99" {
-		t.Fatalf("id=%q", id)
-	}
-	if mock.lastPrompt != "continue" || mock.lastURL != "https://v.example/in.mp4" {
-		t.Fatalf("prompt=%q url=%q", mock.lastPrompt, mock.lastURL)
-	}
-	// Zero Response defaults RespectModeration to true (no video payload).
-	if !(&video.Response{}).RespectModeration() {
-		t.Fatal("expected default RespectModeration true on empty Response")
-	}
-}
-
-type extendStartMock struct {
-	xaiv1.UnimplementedVideoServer
-	lastPrompt string
-	lastURL    string
-}
-
-func (m *extendStartMock) ExtendVideo(ctx context.Context, req *xaiv1.ExtendVideoRequest) (*xaiv1.StartDeferredResponse, error) {
-	m.lastPrompt = req.Prompt
-	if req.Video != nil {
-		m.lastURL = req.Video.GetUrl()
-	}
-	return &xaiv1.StartDeferredResponse{RequestId: "ext-99"}, nil
 }

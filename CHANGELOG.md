@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Test suite leaner (~84→81 `Test*`, ~3.7k→3.5k hand-written test LOC): root wiring smoke replaces multi-domain RPC mega-test; merge tools/chat/image/video overlaps; domain packages keep sole RPC coverage (files get/delete/public URL, collections CRUD/search, etc.).
 - Style pass aligned with project Go constraints: `goimports -local` import groups (stdlib → third-party → module), godoc on exported chat options/response accessors, `Client.Close` joins multi-conn errors via `errors.Join`, safer `proto.Clone` type assert, package comments for `internal/*`.
 - `make fmt` prefers `goimports -local github.com/fun7257/xai-sdk-go` (falls back to `gofmt`).
 

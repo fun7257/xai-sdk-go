@@ -87,7 +87,8 @@ func TestCollectionsSearchLegacyAndMCPOptions(t *testing.T) {
 	}
 }
 
-func TestFunctionStringAndModeCallType(t *testing.T) {
+func TestFunctionModeCallTypeAndServerTools(t *testing.T) {
+	// string / []byte / map parameters
 	fn, err := tools.Function("f", "d", `{"type":"object"}`)
 	if err != nil || fn.GetFunction().GetParameters() != `{"type":"object"}` {
 		t.Fatalf("%v %#v", err, fn)
@@ -96,6 +97,19 @@ func TestFunctionStringAndModeCallType(t *testing.T) {
 	if err != nil || raw.GetFunction() == nil {
 		t.Fatal(err)
 	}
+	mapped, err := tools.Function("get_weather", "weather", map[string]any{
+		"type": "object", "properties": map[string]any{"city": map[string]any{"type": "string"}},
+	})
+	if err != nil || mapped.GetFunction() == nil || mapped.GetFunction().Name != "get_weather" {
+		t.Fatalf("map params: %v %#v", err, mapped)
+	}
+	if tools.RequiredTool("get_weather").GetFunctionName() != "get_weather" {
+		t.Fatal("RequiredTool")
+	}
+	if tools.CodeExecution().GetCodeExecution() == nil {
+		t.Fatal("CodeExecution")
+	}
+
 	if tools.Mode("none").GetMode() != xaiv1.ToolMode_TOOL_MODE_NONE {
 		t.Fatal("none")
 	}

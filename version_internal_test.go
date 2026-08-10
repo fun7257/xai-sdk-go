@@ -16,9 +16,3 @@ func TestNormalizeModuleVersion(t *testing.T) {
 		}
 	}
 }
-
-func TestResolveModuleVersionNonEmpty(t *testing.T) {
-	if got := resolveModuleVersion(); got == "" {
-		t.Fatal("resolveModuleVersion empty")
-	}
-}

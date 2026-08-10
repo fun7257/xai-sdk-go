@@ -34,7 +34,7 @@ func (m *captureImage) GenerateImage(ctx context.Context, req *xaiv1.GenerateIma
 	}, nil
 }
 
-func TestDefaultFormatURL(t *testing.T) {
+func TestSampleRequestShape(t *testing.T) {
 	mock := &captureImage{}
 	srv, err := testutil.Start(func(s *grpc.Server) { xaiv1.RegisterImageServer(s, mock) })
 	if err != nil {
@@ -43,13 +43,14 @@ func TestDefaultFormatURL(t *testing.T) {
 	defer srv.Close()
 
 	cli := image.New(srv.Conn)
+
+	// Default format is URL (Sample + Prepare).
 	if _, err := cli.Sample(context.Background(), "cat", "grok-imagine-image"); err != nil {
 		t.Fatal(err)
 	}
 	if mock.last == nil || mock.last.Format != xaiv1.ImageFormat_IMG_FORMAT_URL {
 		t.Fatalf("Sample default format=%v want URL", mock.last.Format)
 	}
-
 	req, err := cli.Prepare("dog", "grok-imagine-image")
 	if err != nil {
 		t.Fatal(err)
@@ -58,23 +59,7 @@ func TestDefaultFormatURL(t *testing.T) {
 		t.Fatalf("Prepare default format=%v want URL", req.Format)
 	}
 
-	if _, err := cli.Sample(context.Background(), "x", "m", image.WithFormatBase64()); err != nil {
-		t.Fatal(err)
-	}
-	if mock.last.Format != xaiv1.ImageFormat_IMG_FORMAT_BASE64 {
-		t.Fatalf("got %v", mock.last.Format)
-	}
-}
-
-func TestFileIDAndStorageRequest(t *testing.T) {
-	mock := &captureImage{}
-	srv, err := testutil.Start(func(s *grpc.Server) { xaiv1.RegisterImageServer(s, mock) })
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer srv.Close()
-
-	cli := image.New(srv.Conn)
+	// File id + storage options land on the wire; response surfaces file output.
 	exp := time.Hour
 	resp, err := cli.Sample(context.Background(), "edit", "grok-imagine-image",
 		image.WithImageFileID("file_abc"),
@@ -97,6 +82,13 @@ func TestFileIDAndStorageRequest(t *testing.T) {
 	}
 	if resp.PublicURL() != "https://cdn.example/public.png" {
 		t.Fatalf("public_url=%q", resp.PublicURL())
+	}
+
+	if _, err := cli.Sample(context.Background(), "x", "m", image.WithFormatBase64()); err != nil {
+		t.Fatal(err)
+	}
+	if mock.last.Format != xaiv1.ImageFormat_IMG_FORMAT_BASE64 {
+		t.Fatalf("got %v", mock.last.Format)
 	}
 }
 

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"google.golang.org/grpc"
 
@@ -18,14 +19,41 @@ import (
 
 type mockFiles struct {
 	xaiv1.UnimplementedFilesServer
-	lastList *xaiv1.ListFilesRequest
-	mu       sync.Mutex
-	uploads  int
+	lastList   *xaiv1.ListFilesRequest
+	lastGet    string
+	lastDelete string
+	lastPub    *xaiv1.CreatePublicUrlRequest
+	lastRevoke string
+	mu         sync.Mutex
+	uploads    int
 }
 
 func (m *mockFiles) ListFiles(ctx context.Context, req *xaiv1.ListFilesRequest) (*xaiv1.ListFilesResponse, error) {
 	m.lastList = req
 	return &xaiv1.ListFilesResponse{}, nil
+}
+
+func (m *mockFiles) RetrieveFile(ctx context.Context, req *xaiv1.RetrieveFileRequest) (*xaiv1.File, error) {
+	m.lastGet = req.GetFileId()
+	return &xaiv1.File{Id: req.GetFileId(), Filename: "meta.txt"}, nil
+}
+
+func (m *mockFiles) DeleteFile(ctx context.Context, req *xaiv1.DeleteFileRequest) (*xaiv1.DeleteFileResponse, error) {
+	m.lastDelete = req.GetFileId()
+	return &xaiv1.DeleteFileResponse{Id: req.GetFileId(), Deleted: true}, nil
+}
+
+func (m *mockFiles) CreatePublicUrl(ctx context.Context, req *xaiv1.CreatePublicUrlRequest) (*xaiv1.CreatePublicUrlResponse, error) {
+	m.lastPub = req
+	return &xaiv1.CreatePublicUrlResponse{
+		FileId:    req.GetFileId(),
+		PublicUrl: "https://public.example/" + req.GetFileId(),
+	}, nil
+}
+
+func (m *mockFiles) RevokePublicUrl(ctx context.Context, req *xaiv1.RevokePublicUrlRequest) (*xaiv1.RevokePublicUrlResponse, error) {
+	m.lastRevoke = req.GetFileId()
+	return &xaiv1.RevokePublicUrlResponse{FileId: req.GetFileId()}, nil
 }
 
 func (m *mockFiles) UploadFile(stream xaiv1.Files_UploadFileServer) error {
@@ -138,16 +166,33 @@ func TestBatchUploadCallback(t *testing.T) {
 }
 
 func TestStorageOptionsProto(t *testing.T) {
-	d := files.StorageOptions{Filename: "out.png", PublicURL: true}
-	exp := int64(3600)
-	// ExpiresAfter via duration
-	sec := int64(3600)
-	_ = sec
+	zero := files.StorageOptions{}
+	if zero.Proto() == nil {
+		// zero value still produces a proto (empty filename)
+		t.Fatal("expected non-nil proto for zero StorageOptions")
+	}
+	if files.StorageFromProto(nil) != nil {
+		t.Fatal("StorageFromProto(nil)")
+	}
+	exp := time.Hour
+	pubExp := 2 * time.Hour
+	d := files.StorageOptions{
+		Filename: "out.png", ExpiresAfter: &exp, PublicURL: true, PublicURLExpiresAfter: &pubExp,
+	}
 	p := d.Proto()
-	if p.Filename != "out.png" || p.PublicUrl == nil {
+	if p.Filename != "out.png" || p.ExpiresAfter == nil || *p.ExpiresAfter != 3600 {
 		t.Fatalf("%+v", p)
 	}
-	_ = exp
+	if p.PublicUrl == nil || p.PublicUrl.ExpiresAfter == nil || *p.PublicUrl.ExpiresAfter != 7200 {
+		t.Fatalf("public_url=%+v", p.PublicUrl)
+	}
+	round := files.StorageFromProto(p)
+	if round == nil || round.Filename != "out.png" || !round.PublicURL {
+		t.Fatalf("%+v", round)
+	}
+	if round.ExpiresAfter == nil || *round.ExpiresAfter != time.Hour {
+		t.Fatalf("expires=%v", round.ExpiresAfter)
+	}
 }
 
 func TestBatchUploadItemsReader(t *testing.T) {
@@ -203,5 +248,42 @@ func TestContentWriter(t *testing.T) {
 	b, err := cli.Content(context.Background(), "f1")
 	if err != nil || string(b) != "hello" {
 		t.Fatalf("Content: %v %q", err, b)
+	}
+}
+
+// TestGetDeletePublicURL covers Get/Delete/CreatePublicURL/RevokePublicURL via
+// the shipped files.Client (sole domain coverage after root mega-test removal).
+func TestGetDeletePublicURL(t *testing.T) {
+	mock := &mockFiles{}
+	srv, err := testutil.Start(func(s *grpc.Server) { xaiv1.RegisterFilesServer(s, mock) })
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Close()
+	cli := files.New(srv.Conn)
+	ctx := context.Background()
+
+	meta, err := cli.Get(ctx, "file_meta")
+	if err != nil || meta.GetId() != "file_meta" || mock.lastGet != "file_meta" {
+		t.Fatalf("Get: %v %#v last=%q", err, meta, mock.lastGet)
+	}
+
+	exp := time.Hour
+	pub, err := cli.CreatePublicURL(ctx, "file_pub", &exp)
+	if err != nil || pub.GetPublicUrl() == "" || mock.lastPub == nil {
+		t.Fatalf("CreatePublicURL: %v %#v last=%v", err, pub, mock.lastPub)
+	}
+	if mock.lastPub.GetFileId() != "file_pub" || mock.lastPub.ExpiresAfter == nil || *mock.lastPub.ExpiresAfter != 3600 {
+		t.Fatalf("CreatePublicURL wire=%+v", mock.lastPub)
+	}
+
+	rev, err := cli.RevokePublicURL(ctx, "file_pub")
+	if err != nil || rev.GetFileId() != "file_pub" || mock.lastRevoke != "file_pub" {
+		t.Fatalf("RevokePublicURL: %v %#v last=%q", err, rev, mock.lastRevoke)
+	}
+
+	del, err := cli.Delete(ctx, "file_del")
+	if err != nil || !del.GetDeleted() || del.GetId() != "file_del" || mock.lastDelete != "file_del" {
+		t.Fatalf("Delete: %v %#v last=%q", err, del, mock.lastDelete)
 	}
 }
