@@ -5,6 +5,7 @@
 ### Changed
 
 - **Versioning:** releases are **git tags only** (`vX.Y.Z`). Removed hand-maintained version constant; `xai.Version()` now reports the module version from the Go module graph (`runtime/debug`), or `devel` for untagged local trees. Wire metadata still uses that value.
+- **CI:** offline suite runs on PR, push to main/master, **`v*` tags**, and a **daily schedule**; after green main builds, floating tag **`dev`** is force-updated (development channel). Documented in `docs/CI.md`.
 
 ### Docs
 

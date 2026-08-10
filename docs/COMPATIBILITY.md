@@ -5,7 +5,7 @@
 | Channel | Policy |
 |---------|--------|
 | Module | `github.com/fun7257/xai-sdk-go` |
-| Series | **v0.x** — versions are **git tags** (`v0.2.0`, …); see [`RELEASE.md`](RELEASE.md) |
+| Series | **v0.x** — release tags `vX.Y.Z` (immutable); optional floating `dev` for tip of main — [`RELEASE.md`](RELEASE.md) · [`CI.md`](CI.md) |
 | Pre-v1 | **Breaking changes allowed** on minor tags when needed for correctness or Go UX; prefer deprecations when practical |
 | Future v1 | Intended stability floor for preferred entry points in [`PARITY.md`](PARITY.md) |
 
