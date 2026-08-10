@@ -1,24 +1,25 @@
 # Complete usage guide / 完整调用指南
 
-**EN** Idiomatic Go client for the [xAI API](https://docs.x.ai) (`github.com/fun7257/xai-sdk-go`).  
-**中文** 面向 [xAI API](https://docs.x.ai) 的惯用 Go gRPC 客户端。
+**EN** Parameter reference and call patterns for `github.com/fun7257/xai-sdk-go`.  
+**中文** 本模块的参数说明与调用形态参考。
+
+Landing / 入口: [`../README.md`](../README.md) · Design / 设计: [`PARITY.md`](PARITY.md) · Diffs: [`DIFF.md`](DIFF.md)
 
 | | EN | 中文 |
 |--|----|------|
-| Runnable example | [`examples/complete/`](../examples/complete/) | 同左 |
-| Design summary | [`PARITY.md`](PARITY.md) | 设计摘要 |
-| Go vs Python | [`DIFF.md`](DIFF.md) | 差异说明 |
+| Runnable example | [`examples/complete/`](../examples/complete/) | 可运行完整示例 |
 | Stability | [`COMPATIBILITY.md`](COMPATIBILITY.md) | API 稳定性 |
+| Contribute / gates | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) | 贡献与质量门禁 |
 
 ---
 
 ## 1. Install / 安装
 
 ```bash
-go get github.com/fun7257/xai-sdk-go
+go get github.com/fun7257/xai-sdk-go   # Go 1.26+
 ```
 
-**Requirements / 要求:** Go **1.26+**
+Quick start also on the [root README](../README.md).
 
 ---
 
@@ -234,16 +235,8 @@ What it demonstrates / 演示内容:
 
 ---
 
-## 8. Quality gates / 质量门禁
+## 8. Quality gates & version / 质量门禁与版本
 
-```bash
-make check          # vet + test + examples (offline)
-make integration    # optional live smoke; needs XAI_API_KEY
-```
-
----
-
-## 9. Version / 版本
-
-Public constant / 公开常量: **`xai.Version`** only (`version.go`).  
-Wire metadata uses the same value. Release steps: [`RELEASE.md`](RELEASE.md).
+Offline gates / 离线门禁: [`../CONTRIBUTING.md`](../CONTRIBUTING.md) (`make check`, lint, vuln, race).  
+Live smoke / 真网可选: `make integration` (needs `XAI_API_KEY`).  
+Version / 版本: **`xai.Version`** only — [`RELEASE.md`](RELEASE.md).

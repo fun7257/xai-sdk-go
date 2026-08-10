@@ -1,41 +1,34 @@
 # Go SDK vs Python `xai-sdk` — difference guide
 
-**Audience:** library authors and app developers comparing this module to the official Python SDK.  
+**Audience:** comparing this module to the official Python SDK.  
 **Module:** `github.com/fun7257/xai-sdk-go`  
-**Python baseline:** product surface of official `xai-sdk` (sync client; aio is intentionally not mirrored)  
-**Related:** design principles in [`PARITY.md`](PARITY.md) · proto residual in [`PROTO.md`](PROTO.md)
+**Python baseline:** official `xai-sdk` product surface (sync; aio not mirrored)
+
+| Related doc | Role |
+|-------------|------|
+| [`PARITY.md`](PARITY.md) | **Primary** design principles + preferred Go entry points |
+| [`GUIDE.zh-en.md`](GUIDE.zh-en.md) | Parameter reference (EN + 中文) |
+| [`PROTO.md`](PROTO.md) | Residual proto fields |
+| [`COMPATIBILITY.md`](COMPATIBILITY.md) | Semver / public surface |
+
+**Success metric:** product capability + idiomatic Go — **not** cloning Python names or dual stacks.
 
 ---
 
 ## 0. How to read this document
 
-Differences fall into **four kinds**. Do not mix them:
-
 | Kind | Meaning | Action |
 |------|---------|--------|
-| **A. Intentional Go design** | Same product capability, different call shape for better Go UX / safety | Prefer Go form; do not “fix” to look like Python |
-| **B. Product capability** | RPC/feature supported in both (or noted as partial) | Use the Go preferred entry point |
-| **C. Proto residual** | Go (and Python) may use fields not yet in public `xai-org/xai-proto` | Functional OK; contract risk until upstream catches up |
-| **D. Out of scope** | Explicit non-goals for this repo | Will not be implemented |
+| **A. Intentional Go design** | Same capability, different call shape | Prefer Go form |
+| **B. Product capability** | Feature in both (or partial) | Use preferred entry in PARITY |
+| **C. Proto residual** | Fields not yet in public xai-proto | Functional OK; contract risk |
+| **D. Out of scope** | Explicit non-goals | Will not implement |
 
-**Success metric for this SDK:** product capability + idiomatic Go call experience — **not** cloning Python names, dual stacks, or class hierarchies.
-
----
-
-## 1. Design principles (why Go differs)
-
-1. **Context first** — every RPC takes `context.Context`; cancellation is not a second client type.  
-2. **Functional options** — `WithTemperature`, `WithN`, etc., instead of large kwargs.  
-3. **One primary name family** — short path for n=1 (`Sample`), plural + options for multi (`Samples` + `WithN`).  
-4. **No silent data loss** — multi-result APIs never keep only index 0 without saying so; singular APIs **reject** n>1 with an error pointing to the plural form.  
-5. **Validate on the primary path** — illegal domain/handle combos fail when constructing tools/sources; `Unchecked*` is an explicit escape hatch.  
-6. **Explicit wrappers** — methods like `Content()`, `URL()`, not dynamic attribute access.  
-7. **No global side effects by default** — OTEL only after `telemetry.Setup`.  
-8. **Errors as values** — domain errors (`video.GenerationError`) work with `errors.As` / `errors.Is` patterns where applicable.
+Design principles are maintained in **[`PARITY.md`](PARITY.md)** (call-site first, no silent data loss, validate on primary path, one name family, opt-in OTEL). This file does not restate them.
 
 ---
 
-## 2. Quick mapping (Python → Go)
+## 1. Quick mapping (Python → Go)
 
 | Python (sync, conceptual) | Preferred Go |
 |---------------------------|--------------|
@@ -59,7 +52,7 @@ Differences fall into **four kinds**. Do not mix them:
 
 ---
 
-## 3. Client, auth, connection
+## 2. Client, auth, connection
 
 ### Capability
 
@@ -91,7 +84,7 @@ Differences fall into **four kinds**. Do not mix them:
 
 ---
 
-## 4. Chat
+## 3. Chat
 
 ### Capability
 
@@ -173,7 +166,7 @@ resps, err := session.Defers(ctx, chat.WithDeferN(2), chat.WithDeferTimeout(10*t
 
 ---
 
-## 5. Tools
+## 4. Tools
 
 ### Capability
 
@@ -202,7 +195,7 @@ resps, err := session.Defers(ctx, chat.WithDeferN(2), chat.WithDeferTimeout(10*t
 
 ---
 
-## 6. Search (Live Search parameters)
+## 5. Search (Live Search parameters)
 
 ### Capability
 
@@ -223,7 +216,7 @@ resps, err := session.Defers(ctx, chat.WithDeferN(2), chat.WithDeferTimeout(10*t
 
 ---
 
-## 7. Image
+## 6. Image
 
 ### Capability
 
@@ -260,7 +253,7 @@ imgs, err := client.Image.Samples(ctx, "a cat", model, image.WithN(2))
 
 ---
 
-## 8. Video
+## 7. Video
 
 ### Capability
 
@@ -286,7 +279,7 @@ imgs, err := client.Image.Samples(ctx, "a cat", model, image.WithN(2))
 
 ---
 
-## 9. Files
+## 8. Files
 
 ### Capability
 
@@ -313,7 +306,7 @@ imgs, err := client.Image.Samples(ctx, "a cat", model, image.WithN(2))
 
 ---
 
-## 10. Batch
+## 9. Batch
 
 ### Capability
 
@@ -337,7 +330,7 @@ imgs, err := client.Image.Samples(ctx, "a cat", model, image.WithN(2))
 
 ---
 
-## 11. Collections
+## 10. Collections
 
 ### Capability
 
@@ -364,7 +357,7 @@ imgs, err := client.Image.Samples(ctx, "a cat", model, image.WithN(2))
 
 ---
 
-## 12. Models, Auth, Tokenize
+## 11. Models, Auth, Tokenize
 
 | Domain | Go | Notes |
 |--------|-----|--------|
@@ -378,7 +371,7 @@ imgs, err := client.Image.Samples(ctx, "a cat", model, image.WithN(2))
 
 ---
 
-## 13. Telemetry
+## 12. Telemetry
 
 ### Capability
 
@@ -401,7 +394,7 @@ imgs, err := client.Image.Samples(ctx, "a cat", model, image.WithN(2))
 
 ---
 
-## 14. Types / constants
+## 13. Types / constants
 
 | Go package `types` | Purpose |
 |--------------------|---------|
@@ -412,7 +405,7 @@ Python often uses Literals / enums in typing; Go uses string constants + interna
 
 ---
 
-## 15. Proto residual (kind C)
+## 14. Proto residual (kind C)
 
 Public [xai-org/xai-proto](https://github.com/xai-org/xai-proto) can lag the Python SDK / live API. This repo keeps **local residual** patches (field numbers aligned with Python descriptors where applicable):
 
@@ -428,7 +421,7 @@ Public [xai-org/xai-proto](https://github.com/xai-org/xai-proto) can lag the Pyt
 
 ---
 
-## 16. Out of scope (kind D)
+## 15. Out of scope (kind D)
 
 | Item | Reason |
 |------|--------|
@@ -442,38 +435,25 @@ Public [xai-org/xai-proto](https://github.com/xai-org/xai-proto) can lag the Pyt
 
 ---
 
-## 17. Examples matrix
+## 16. Examples matrix
 
-Under `examples/` (env credentials only; never commit keys):
-
-| Example | Demonstrates |
-|---------|----------------|
-| `chat`, `stream`, `function_calling`, `structured` | Core chat UX |
-| `deferred`, `stored`, `compaction`, `reasoning` | Long-path chat |
-| `server_side_tools`, `collections_tool` | Tools |
-| `image`, `image_multi_reference`, `image_understanding` | Image |
-| `video`, `video_extension` | Video (`ExtendStart`) |
-| `files`, `files_chat`, `inline_files_chat` | Files + chat attachments |
-| `batch` | List + `PrepareBatchRequest` / batch envelope |
-| `collections` | Management key |
-| `models`, `auth`, `tokenizer` | Utility clients |
-| `telemetry`, `smoke` | Observability / multi-domain smoke |
+Full catalog: [`../examples/README.md`](../examples/README.md).  
+Start with `examples/complete` + [`GUIDE.zh-en.md`](GUIDE.zh-en.md).
 
 ---
 
-## 18. Engineering notes (repo process)
+## 17. Engineering notes (repo process)
 
-| Topic | Status |
+| Topic | Where |
 |-------|--------|
-| Module path | `github.com/fun7257/xai-sdk-go` |
-| Go version | 1.26+ |
-| Tests | offline mock/bufconn preferred; live smoke optional |
-| Version constant | `xai.Version` (e.g. `0.2.0`) |
-| Git remote / tags | process-dependent (workspace may ship without `.git`) |
+| Module / Go version | Root README · `go.mod` |
+| Offline tests / CI gates | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) |
+| Version constant | `xai.Version` — [`RELEASE.md`](RELEASE.md) · [`COMPATIBILITY.md`](COMPATIBILITY.md) |
+| Live smoke | `make integration` (optional) |
 
 ---
 
-## 19. Migration cheat-sheet (from older Go dual names)
+## 18. Migration cheat-sheet (from older Go dual names)
 
 | Older / Python-shaped | Prefer now |
 |-----------------------|------------|
@@ -488,7 +468,7 @@ Under `examples/` (env credentials only; never commit keys):
 
 ---
 
-## 20. Summary
+## 19. Summary
 
 | Question | Answer |
 |----------|--------|

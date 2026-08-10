@@ -4,8 +4,9 @@
 
 ### Docs
 
-- Bilingual complete usage guide: `docs/GUIDE.zh-en.md` (client/chat/tools parameters EN+中文).
-- Annotated end-to-end example: `examples/complete/` (Sample, StreamReader, optional WebSearch).
+- **Doc consolidation:** single navigation map in root `README.md`; each topic has one primary home (GUIDE usage, PARITY design, DIFF Python diffs, CONTRIBUTING gates, RELEASE version, COMPATIBILITY stability). Slimmed overlapping tables; `ROADMAP_OSS` collapsed to completed status card.
+- Link integrity: `docs/doclinks_test.go` checks in-repo Markdown links and README nav roles.
+- Bilingual complete usage guide: `docs/GUIDE.zh-en.md`; annotated example: `examples/complete/`.
 
 ### Operations (P2)
 

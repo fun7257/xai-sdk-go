@@ -1,39 +1,36 @@
 # Release checklist
 
-Maintainer steps to ship a version of `github.com/fun7257/xai-sdk-go`.
+Maintainer steps to ship `github.com/fun7257/xai-sdk-go`.
 
 ## Version single source of truth
 
 | Symbol | Role |
 |--------|------|
-| **`xai.Version`** in `version.go` | **Only public version constant.** Bump this for releases. |
-| `conn.SDKVersion` | Wire metadata (`xai-sdk-version: go/<ver>`). Set from `xai.Version` in root package `init()`. Default string in `internal/conn` must match `version.go` until init runs. |
+| **`xai.Version`** in `version.go` | **Only public version constant** — bump for releases |
+| `conn.SDKVersion` | Wire metadata `xai-sdk-version: go/<ver>`; set from `xai.Version` in root `init()`. Keep the default string in `internal/conn` equal to `version.go` until init runs |
 
-Do **not** invent a second public version API. Tests assert `conn.SDKVersion == xai.Version` after import.
+Do not invent a second public version API. `TestVersionSingleSourceOfTruth` asserts equality after import.  
+Semver / public surface policy: [`COMPATIBILITY.md`](COMPATIBILITY.md).
 
 ## Before tagging
 
-1. Update **`version.go`** (`xai.Version = "X.Y.Z"`).
-2. Keep **`internal/conn` default `SDKVersion`** string in sync with that value (same `X.Y.Z`).
-3. Move **`CHANGELOG.md`** Unreleased notes into `## [X.Y.Z] — YYYY-MM-DD`.
-4. Run offline gates:
+1. Set **`version.go`** (`xai.Version = "X.Y.Z"`).
+2. Sync **`internal/conn` default `SDKVersion`** to the same string.
+3. Fold **`CHANGELOG.md`** Unreleased into `## [X.Y.Z] — YYYY-MM-DD`.
+4. Offline gates (full list: [`CONTRIBUTING.md`](../CONTRIBUTING.md)):
 
    ```bash
-   make check
-   make race
-   make lint
-   make vuln
+   make check && make race && make lint && make vuln
    ```
 
-5. Optional live smoke (costs API usage):
+5. Optional live smoke (API cost):
 
    ```bash
    export XAI_API_KEY=xai-...
-   make integration
-   # or: go run ./examples/smoke
+   make integration   # or: go run ./examples/smoke
    ```
 
-6. Commit on `main` with a clear message.
+6. Commit on `main`.
 
 ## Tag and publish
 
@@ -43,21 +40,17 @@ git push origin main
 git push origin vX.Y.Z
 ```
 
-Consumers:
-
 ```bash
 go get github.com/fun7257/xai-sdk-go@vX.Y.Z
 ```
 
-pkg.go.dev indexes the module after the tag is public.
-
 ## Post-release
 
-- Confirm GitHub Actions CI is green on the tag/commit.
-- Open Dependabot PRs as needed (weekly schedule in `.github/dependabot.yml`).
-- For security fixes, follow `docs/SECURITY.md`.
+- Confirm default CI green on the tag  
+- Dependabot: `.github/dependabot.yml` (weekly)  
+- Security process: [`SECURITY.md`](SECURITY.md)
 
-## Not required for a library module
+## Not required
 
-- Multi-platform binary goreleaser artifacts (this is an importable Go module, not a CLI ship).
-- Mandatory live e2e on every PR (integration is opt-in / secrets-gated).
+- Goreleaser multi-platform binaries (this is an importable module)  
+- Mandatory live e2e on every PR  
