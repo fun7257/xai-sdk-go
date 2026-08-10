@@ -9,6 +9,8 @@ Idiomatic Go gRPC client for the [xAI API](https://docs.x.ai). **Go call UX firs
 - Proto residual: [`docs/PROTO.md`](docs/PROTO.md)
 - OSS roadmap: [`docs/ROADMAP_OSS.md`](docs/ROADMAP_OSS.md)
 - Release checklist: [`docs/RELEASE.md`](docs/RELEASE.md)
+- **Complete bilingual usage guide / 中英双语完整调用指南:** [`docs/GUIDE.zh-en.md`](docs/GUIDE.zh-en.md)
+- Annotated example / 带注释示例: [`examples/complete/`](examples/complete/)
 
 **Module:** `github.com/fun7257/xai-sdk-go` · **Go:** 1.26+ · **License:** Apache-2.0
 

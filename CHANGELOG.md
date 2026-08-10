@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Docs
+
+- Bilingual complete usage guide: `docs/GUIDE.zh-en.md` (client/chat/tools parameters EN+中文).
+- Annotated end-to-end example: `examples/complete/` (Sample, StreamReader, optional WebSearch).
+
 ### Operations (P2)
 
 - Dependabot: weekly `gomod` + `github-actions` (`.github/dependabot.yml`).
