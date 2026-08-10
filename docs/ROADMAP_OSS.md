@@ -41,9 +41,9 @@ hardens toward **L3 (senior expression)** without another Python-alignment pass.
 
 | Wave | Status |
 |------|--------|
-| P0 / Wave 1 | **In tree** — docs, CI, zero-pkg tests, lint fixes, local git readiness |
-| P1 / Wave 2 | Planned |
-| P2 / Wave 3 | Planned |
+| P0 / Wave 1 | **Done** — governance docs, CI/Makefile gates, zero-pkg tests, lint+vuln clean, local git |
+| P1 / Wave 2 | Planned (sentinel errors, Example godoc, coverage floors) |
+| P2 / Wave 3 | Planned (Dependabot, templates, integration smoke, release automation) |
 
 ## Non-goals
 
