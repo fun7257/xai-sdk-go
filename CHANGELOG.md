@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Removed
+
+- **Embed proto/generated client surface** (`third_party/.../embed.proto`, `embed*.pb.go`) — product non-goal; unused by library packages.
+- **Sample RPC surface** — slimmed `sample.proto` to `FinishReason` only (still required by chat); removed `sample_grpc.pb.go` and unused SampleText messages.
+
+### Docs
+
+- `docs/PROTO.md`: inventory of kept protos, omit reasons for embed/Sample RPC, regen notes for stale `*_grpc.pb.go`.
+
 ## [0.1.1] — 2026-08-10
 
 ### Fixed

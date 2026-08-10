@@ -13,6 +13,34 @@ option go_package = "github.com/fun7257/xai-sdk-go/xai/api/v1;xaiv1";
 
 Import stability of `xaiv1` types: [`COMPATIBILITY.md`](COMPATIBILITY.md).
 
+## Tree inventory (kept inputs)
+
+| Proto | Why kept |
+|-------|----------|
+| `auth.proto` | Auth client |
+| `batch.proto` | Batch client (+ `google/rpc/status.proto`) |
+| `chat.proto` | Chat client |
+| `collections.proto` | Collections management |
+| `deferred.proto` | Shared deferred status (chat/video) |
+| `documents.proto` | Documents.Search (collections RAG) |
+| `files.proto` | Files client |
+| `image.proto` | Image client |
+| `models.proto` | Models client (incl. embedding *model list*, not Embed RPC) |
+| `sample.proto` | **Slim residual:** only `FinishReason` (imported by chat). No Sample RPC / no `sample_grpc.pb.go` |
+| `shared_extra.proto` | Imported by collections |
+| `tokenize.proto` | Tokenize client |
+| `types.proto` | Chunk config types for collections |
+| `usage.proto` | Shared usage messages |
+| `video.proto` | Video client |
+| `google/rpc/status.proto` | Batch result error status |
+
+### Intentionally omitted
+
+| Item | Reason |
+|------|--------|
+| **`embed.proto` / Embedder service** | Product **non-goal** (no Embed client). Removed from `third_party` and generated tree. |
+| **Sample RPC** (`SampleText` / streaming) | Unused; product completions use Chat. Types stripped except `FinishReason`. |
+
 ## Residual fields (local synthesis)
 
 Public xai-proto may lag the live API / Python descriptors. This repo keeps **local residual** patches for wire parity:
@@ -22,6 +50,7 @@ Public xai-proto may lag the live API / Python descriptors. This repo keeps **lo
 | Collections | `collections.proto` / related management messages |
 | Files | Public URL RPCs; `ListFilesRequest.filter` |
 | Image / Video | `file_id` inputs, `storage_options`, response storage fields |
+| `sample.proto` | Slimmed vs upstream (enum-only) for chat shared types |
 
 When upstream publishes identical definitions, re-sync and drop residuals.
 
@@ -29,7 +58,9 @@ When upstream publishes identical definitions, re-sync and drop residuals.
 
 ```bash
 make proto   # needs protoc + protoc-gen-go + protoc-gen-go-grpc
+# If a service was removed from a .proto, delete stale *_grpc.pb.go before or after regen.
 go test ./...
 ```
 
-Do **not** hand-edit `xai/api/v1/*.pb.go`. Contributor context: [`CONTRIBUTING.md`](../CONTRIBUTING.md).
+Do **not** hand-edit `xai/api/v1/*.pb.go` except removing orphaned `*_grpc.pb.go` after dropping a service.  
+Contributor context: [`CONTRIBUTING.md`](../CONTRIBUTING.md).
