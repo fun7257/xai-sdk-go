@@ -15,6 +15,7 @@ func TestProjectMarkdownLinksResolve(t *testing.T) {
 	root := findModuleRoot(t)
 	mdFiles := []string{
 		"README.md",
+		"README.zh-CN.md",
 		"CONTRIBUTING.md",
 		"CHANGELOG.md",
 		"examples/README.md",
@@ -82,6 +83,7 @@ func TestREADMEDocMapCoversCoreRoles(t *testing.T) {
 	}
 	s := string(data)
 	needles := []string{
+		"README.zh-CN.md",
 		"## Install",
 		"## Quick start",
 		"## Core patterns",
@@ -103,6 +105,26 @@ func TestREADMEDocMapCoversCoreRoles(t *testing.T) {
 	for _, n := range needles {
 		if !strings.Contains(s, n) {
 			t.Errorf("README.md missing nav element %q", n)
+		}
+	}
+
+	zh, err := os.ReadFile(filepath.Join(root, "README.zh-CN.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	zs := string(zh)
+	for _, n := range []string{
+		"README.md",
+		"## 安装",
+		"## 快速开始",
+		"## 核心形态",
+		"## 包一览",
+		"## 文档",
+		"docs/API.md",
+		"examples/complete",
+	} {
+		if !strings.Contains(zs, n) {
+			t.Errorf("README.zh-CN.md missing nav element %q", n)
 		}
 	}
 }
