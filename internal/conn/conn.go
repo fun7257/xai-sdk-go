@@ -20,17 +20,18 @@ import (
 var SDKVersion = "0.2.0"
 
 // ResolveAPIKey returns an explicit key or XAI_API_KEY.
+// Missing key paths wrap [ErrNoAPIKey] for errors.Is.
 func ResolveAPIKey(explicit string, skipEnv bool) (string, error) {
 	if explicit != "" {
 		return explicit, nil
 	}
 	if skipEnv {
-		return "", fmt.Errorf("API key not provided")
+		return "", fmt.Errorf("API key not provided: %w", ErrNoAPIKey)
 	}
 	if v := os.Getenv("XAI_API_KEY"); v != "" {
 		return v, nil
 	}
-	return "", fmt.Errorf("trying to read the xAI API key from the XAI_API_KEY environment variable but it doesn't exist")
+	return "", fmt.Errorf("trying to read the xAI API key from the XAI_API_KEY environment variable but it doesn't exist: %w", ErrNoAPIKey)
 }
 
 // ResolveManagementKey returns optional management key.
@@ -62,7 +63,7 @@ const DefaultServiceConfig = `{
 // Dial creates a gRPC connection with Bearer auth and SDK metadata.
 func Dial(ctx context.Context, target, apiKey string, insecureDial bool, timeout time.Duration, extraMD []string, extra []grpc.DialOption) (*grpc.ClientConn, error) {
 	if apiKey == "" {
-		return nil, fmt.Errorf("empty xAI API key provided")
+		return nil, fmt.Errorf("empty xAI API key provided: %w", ErrEmptyAPIKey)
 	}
 	const mib = 1 << 20
 	opts := []grpc.DialOption{

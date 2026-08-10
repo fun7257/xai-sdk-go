@@ -2,6 +2,7 @@ package conn_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/fun7257/xai-sdk-go/internal/conn"
@@ -12,13 +13,29 @@ func TestResolveAPIKey(t *testing.T) {
 	if err != nil || k != "explicit" {
 		t.Fatalf("%q %v", k, err)
 	}
-	if _, err := conn.ResolveAPIKey("", true); err == nil {
+	_, err = conn.ResolveAPIKey("", true)
+	if err == nil {
 		t.Fatal("expected error")
+	}
+	if !errors.Is(err, conn.ErrNoAPIKey) {
+		t.Fatalf("want ErrNoAPIKey, got %v", err)
 	}
 	t.Setenv("XAI_API_KEY", "env-key")
 	k, err = conn.ResolveAPIKey("", false)
 	if err != nil || k != "env-key" {
 		t.Fatalf("%q %v", k, err)
+	}
+	t.Setenv("XAI_API_KEY", "")
+	_, err = conn.ResolveAPIKey("", false)
+	if !errors.Is(err, conn.ErrNoAPIKey) {
+		t.Fatalf("want ErrNoAPIKey on missing env, got %v", err)
+	}
+}
+
+func TestDialEmptyKey(t *testing.T) {
+	_, err := conn.Dial(context.Background(), "127.0.0.1:9", "", true, 0, nil, nil)
+	if !errors.Is(err, conn.ErrEmptyAPIKey) {
+		t.Fatalf("want ErrEmptyAPIKey, got %v", err)
 	}
 }
 

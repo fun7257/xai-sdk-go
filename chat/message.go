@@ -97,22 +97,36 @@ func NewDeveloper(parts ...any) (*xaiv1.Message, error) {
 	return message(xaiv1.MessageRole_ROLE_DEVELOPER, parts...)
 }
 
-// User builds a user message. Panics if a part type is unsupported (use NewUser for error-returning).
+// User builds a user message from string or *Content parts.
+//
+// Panic contract: User panics if any part type is unsupported (not string and
+// not *xaiv1.Content). Prefer this for fixed literal parts at call sites.
+// For dynamic or untrusted part values, use [NewUser], which returns an error
+// instead of panicking.
 func User(parts ...any) *xaiv1.Message {
 	return mustMessage(message(xaiv1.MessageRole_ROLE_USER, parts...))
 }
 
-// System builds a system message. Panics if a part type is unsupported (use NewSystem for error-returning).
+// System builds a system message from string or *Content parts.
+//
+// Panic contract: System panics on unsupported part types. Use [NewSystem]
+// when parts may be invalid and you need an error return.
 func System(parts ...any) *xaiv1.Message {
 	return mustMessage(message(xaiv1.MessageRole_ROLE_SYSTEM, parts...))
 }
 
-// Assistant builds an assistant message. Panics if a part type is unsupported.
+// Assistant builds an assistant message from string or *Content parts.
+//
+// Panic contract: Assistant panics on unsupported part types. Use [NewAssistant]
+// for an error-returning path.
 func Assistant(parts ...any) *xaiv1.Message {
 	return mustMessage(message(xaiv1.MessageRole_ROLE_ASSISTANT, parts...))
 }
 
-// Developer builds a developer message. Panics if a part type is unsupported.
+// Developer builds a developer message from string or *Content parts.
+//
+// Panic contract: Developer panics on unsupported part types. Use [NewDeveloper]
+// for an error-returning path.
 func Developer(parts ...any) *xaiv1.Message {
 	return mustMessage(message(xaiv1.MessageRole_ROLE_DEVELOPER, parts...))
 }

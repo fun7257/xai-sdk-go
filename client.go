@@ -49,7 +49,7 @@ func NewClient(opts ...Option) (*Client, error) {
 		return nil, err
 	}
 	if apiKey == "" {
-		return nil, fmt.Errorf("empty xAI API key provided")
+		return nil, fmt.Errorf("empty xAI API key provided: %w", ErrEmptyAPIKey)
 	}
 
 	c := &Client{}
