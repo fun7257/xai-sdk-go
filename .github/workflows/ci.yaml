@@ -1,12 +1,37 @@
+# Offline quality gates for the Go module (no live xAI API).
+#
+# Triggers:
+#   - pull_request          — every PR
+#   - push main/master      — latest branch tip
+#   - push tags v*          — release tags (semver)
+#   - schedule (daily)      — periodic regression of the same test suite
+#   - workflow_dispatch     — manual re-run
+#
+# After a green run on main/master only: force-move floating tag `dev`
+# so the tip is always available as a development version (overwritten each time).
+# See docs/CI.md and docs/RELEASE.md.
 name: ci
 
 on:
   push:
     branches: [main, master]
+    tags: ["v*"]
   pull_request:
+  schedule:
+    # Daily 02:00 UTC — full offline suite (same job as PR/push)
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   test:
+    name: offline gates
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,4 +60,32 @@ jobs:
           args: ./...
 
       - name: govulncheck
-        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
+
+  # Floating development pointer: only after green CI on default branch tip.
+  # Force-moves tag `dev` → current SHA (overwrite every successful main/master push).
+  publish-dev:
+    name: update dev tag
+    needs: test
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Force-update floating tag dev
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Lightweight tag, moved on every green main build (development channel).
+          git tag -f dev "$SHA"
+          git push -f origin refs/tags/dev
+          echo "dev -> $SHA (overwritten development version)"

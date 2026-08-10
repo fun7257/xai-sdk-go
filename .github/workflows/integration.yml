@@ -1,5 +1,8 @@
-# Optional live smoke. Not run on pull_request.
-# On schedule/dispatch: skips cleanly when repository secret XAI_API_KEY is unset.
+# Optional live smoke against xAI. Never required for PR merge.
+#
+# Triggers: manual + weekly schedule.
+# Without repository secret XAI_API_KEY the job exits 0 (skip).
+# See docs/CI.md.
 name: integration
 
 on:
@@ -7,6 +10,13 @@ on:
   schedule:
     # Weekly Monday 06:00 UTC
     - cron: "0 6 * * 1"
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   smoke:
@@ -22,8 +32,6 @@ jobs:
       - name: Integration smoke (skip if no secret)
         env:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
-          SMOKE_SKIP_IMAGE: "1"
-          SMOKE_SKIP_VIDEO: "1"
         run: |
           if [ -z "${XAI_API_KEY}" ]; then
             echo "XAI_API_KEY secret not configured; skipping live smoke (exit 0)"

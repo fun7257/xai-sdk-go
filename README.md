@@ -15,7 +15,7 @@ Idiomatic Go gRPC client for the [xAI API](https://docs.x.ai).
 | **Stability / pb** | [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md) | Residual protos: [`docs/PROTO.md`](docs/PROTO.md) |
 | **Security** | [`docs/SECURITY.md`](docs/SECURITY.md) | — |
 | **Contributor** | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Examples index: [`examples/README.md`](examples/README.md) |
-| **Maintainer** | [`docs/RELEASE.md`](docs/RELEASE.md) | OSS maturity (done): [`docs/ROADMAP_OSS.md`](docs/ROADMAP_OSS.md) |
+| **Maintainer** | [`docs/RELEASE.md`](docs/RELEASE.md) | CI triggers / `dev` tag: [`docs/CI.md`](docs/CI.md) · OSS status: [`docs/ROADMAP_OSS.md`](docs/ROADMAP_OSS.md) |
 | **Changelog** | [`CHANGELOG.md`](CHANGELOG.md) | — |
 
 ---
@@ -107,6 +107,14 @@ go run ./examples/complete   # annotated end-to-end
 
 ## Develop & release
 
-Offline gates and PR process: **[`CONTRIBUTING.md`](CONTRIBUTING.md)** (`make check`, lint, vuln, race).  
-Ship with **git tags** only: **[`docs/RELEASE.md`](docs/RELEASE.md)** (no hand-maintained version constant).  
-Report vulnerabilities: **[`docs/SECURITY.md`](docs/SECURITY.md)**.
+| Topic | Doc |
+|-------|-----|
+| Offline gates (local) | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| **CI mode** (PR / main / **`v*` tags** / **daily tests** / floating **`dev`**) | [`docs/CI.md`](docs/CI.md) |
+| Release tags + `dev` channel | [`docs/RELEASE.md`](docs/RELEASE.md) |
+| Security | [`docs/SECURITY.md`](docs/SECURITY.md) |
+
+```bash
+go get github.com/fun7257/xai-sdk-go@vX.Y.Z   # release (immutable)
+go get github.com/fun7257/xai-sdk-go@dev      # latest green main (overwritten)
+```

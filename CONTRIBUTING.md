@@ -8,7 +8,7 @@
 
 ## Offline quality gates (primary)
 
-These match default CI (`.github/workflows/ci.yaml`):
+These match the **ci** workflow (PR, main push, `v*` tags, daily schedule):
 
 ```bash
 make check   # vet + test + examples build
@@ -17,6 +17,9 @@ make lint    # golangci-lint
 make vuln    # govulncheck
 gofmt -w $(find . -name '*.go' -not -path './xai/api/v1/*')
 ```
+
+**How Actions are triggered** (tag / latest main / floating `dev` / daily CI / live smoke):  
+see **[`docs/CI.md`](docs/CI.md)**.
 
 ## Optional live integration
 
@@ -28,8 +31,8 @@ make integration
 # or: go test -tags=integration ./integration/ -count=1 -v
 ```
 
-Secrets-gated schedule/dispatch: `.github/workflows/integration.yml`.  
-Maintainer context: [`docs/RELEASE.md`](docs/RELEASE.md).
+Secrets-gated weekly schedule + manual: `.github/workflows/integration.yml`.  
+Release tags and `dev` channel: [`docs/RELEASE.md`](docs/RELEASE.md).
 
 ## Proto generation
 

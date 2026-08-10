@@ -25,6 +25,7 @@ func TestProjectMarkdownLinksResolve(t *testing.T) {
 		"docs/PROTO.md",
 		"docs/SECURITY.md",
 		"docs/RELEASE.md",
+		"docs/CI.md",
 		"docs/ROADMAP_OSS.md",
 		".github/pull_request_template.md",
 	}
@@ -87,6 +88,7 @@ func TestREADMEDocMapCoversCoreRoles(t *testing.T) {
 		"docs/SECURITY.md",
 		"CONTRIBUTING.md",
 		"docs/RELEASE.md",
+		"docs/CI.md",
 		"examples/complete",
 	}
 	for _, n := range needles {
