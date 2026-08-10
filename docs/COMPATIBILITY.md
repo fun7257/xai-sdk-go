@@ -16,6 +16,7 @@ Always pin a module version (or commit) in applications. Read `CHANGELOG.md` whe
 **Supported for application use:**
 
 - Root package `xai`: `NewClient`, `Option`s, `Client` domain fields, `Close`, `Version`
+- Sentinel errors: `ErrNoAPIKey`, `ErrEmptyAPIKey`, `ErrNoManagementKey` (`errors.Is`)
 - Domain packages: `chat`, `image`, `video`, `files`, `batch`, `collections`, `tools`, `search`, `telemetry`, `types`, `auth`, `models`, `tokenize`
 - Preferred call shapes (e.g. `Sample` / `Samples` + `WithN`, validating `tools.WebSearch`) described in docs
 

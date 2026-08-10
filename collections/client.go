@@ -6,6 +6,7 @@ package collections
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -14,6 +15,10 @@ import (
 	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
 	"google.golang.org/grpc"
 )
+
+// ErrNoManagementKey is returned when Collections CRUD is used without a
+// management connection / XAI_MANAGEMENT_KEY. Re-exported as xai.ErrNoManagementKey.
+var ErrNoManagementKey = errors.New("xai: management API key not provided")
 
 // Client manages collections (management channel required for CRUD).
 type Client struct {
@@ -40,7 +45,7 @@ func New(api, management grpc.ClientConnInterface) *Client {
 
 func (c *Client) requireMgmt() error {
 	if !c.hasMgmt || c.mgmt == nil {
-		return fmt.Errorf("please provide a management API key")
+		return fmt.Errorf("please provide a management API key: %w", ErrNoManagementKey)
 	}
 	return nil
 }

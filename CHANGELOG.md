@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Expression & correctness (P1)
+
+- Exported sentinel errors: `ErrNoAPIKey`, `ErrEmptyAPIKey`, `ErrNoManagementKey` (usable with `errors.Is`; construction paths wrap with `%w`).
+- Runnable package `Example*` for root, `chat`, `tools`, and `image` (offline; no live network).
+- Raised test coverage on `batch` (~90%), `tools` (~97%), `chat` (≥55%) via real public-method tests.
+- Documented panic contract on `chat.User` / `System` / `Assistant` / `Developer`; dual-path tests with `New*` error constructors.
+
 ### Open-source hygiene (senior SDK floor)
 
 - Added `docs/SECURITY.md` (vulnerability reporting + consumer notes).

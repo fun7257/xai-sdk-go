@@ -2,6 +2,7 @@ package xai_test
 
 import (
 	"context"
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -223,6 +224,8 @@ func TestClientDomains(t *testing.T) {
 
 	if _, err := xai.NewClient(xai.WithoutEnv()); err == nil {
 		t.Fatal("expected missing key error")
+	} else if !errors.Is(err, xai.ErrNoAPIKey) {
+		t.Fatalf("want ErrNoAPIKey, got %v", err)
 	}
 
 	cli, err := xai.NewClient(
@@ -359,6 +362,8 @@ func TestClientDomains(t *testing.T) {
 	defer func() { _ = cliNoMgmt.Close() }()
 	if _, err := cliNoMgmt.Collections.Create(ctx, "x"); err == nil {
 		t.Fatal("expected management key error")
+	} else if !errors.Is(err, xai.ErrNoManagementKey) {
+		t.Fatalf("want ErrNoManagementKey, got %v", err)
 	}
 
 	// pure local consumer path
