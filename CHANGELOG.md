@@ -2,14 +2,11 @@
 
 ## Unreleased
 
+## [0.1.1] — 2026-08-10
+
 ### Fixed
 
 - CI: bump golangci-lint to **v2.12.2** (built with Go 1.26) so lint works with `go 1.26` in `go.mod`. Older v2.1.x failed: "Go language version used to build golangci-lint is lower than the targeted Go version".
-
-### Changed
-
-- **Versioning:** releases are **git tags only** (`vX.Y.Z`). `xai.Version()` reports the module version from the Go module graph (`runtime/debug`), or `devel` for untagged local trees.
-- **CI:** offline suite on PR, main, **`v*` tags**, and a **daily schedule**; floating tag **`dev`** force-updated after green main builds. See `docs/CI.md`.
 
 ## [0.1.0] — 2026-08-10
 
@@ -31,6 +28,11 @@ First public release of the Go gRPC client for the xAI API.
 - Governance: SECURITY, COMPATIBILITY, CONTRIBUTING, Dependabot, CODEOWNERS, issue/PR templates.
 - CI workflows: offline gates + optional integration smoke; floating `dev` channel.
 - Docs: `GUIDE.zh-en.md`, `PARITY.md`, `DIFF.md`, `PROTO.md`, `RELEASE.md`, `CI.md`.
+
+### Changed
+
+- **Versioning:** releases are **git tags only** (`vX.Y.Z`). `xai.Version()` reports the module version from the Go module graph (`runtime/debug`), or `devel` for untagged local trees.
+- **CI:** offline suite on PR, main, **`v*` tags**, and a **daily schedule**; floating tag **`dev`** force-updated after green main builds. See `docs/CI.md`.
 
 ### Proto
 
