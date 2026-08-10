@@ -448,7 +448,7 @@ Start with `examples/complete` + [`GUIDE.zh-en.md`](GUIDE.zh-en.md).
 |-------|--------|
 | Module / Go version | Root README · `go.mod` |
 | Offline tests / CI gates | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) |
-| Version constant | `xai.Version` — [`RELEASE.md`](RELEASE.md) · [`COMPATIBILITY.md`](COMPATIBILITY.md) |
+| Version | **git tags** + `xai.Version()` from module graph — [`RELEASE.md`](RELEASE.md) |
 | Live smoke | `make integration` (optional) |
 
 ---

@@ -1,38 +1,40 @@
 # Release checklist
 
-Maintainer steps to ship `github.com/fun7257/xai-sdk-go`.
+This module follows **standard Go module releases**: the published version is the
+**git tag**. There is no hand-maintained `version.go` constant to bump.
 
-## Version single source of truth
+## Version source of truth
 
-| Symbol | Role |
+| Source | Role |
 |--------|------|
-| **`xai.Version`** in `version.go` | **Only public version constant** — bump for releases |
-| `conn.SDKVersion` | Wire metadata `xai-sdk-version: go/<ver>`; set from `xai.Version` in root `init()`. Keep the default string in `internal/conn` equal to `version.go` until init runs |
+| **Git tag** `vX.Y.Z` | Module version consumers get via `go get …@vX.Y.Z` / proxy |
+| **`xai.Version()`** | Runtime report of that module version (from `runtime/debug` build info) for logs and gRPC metadata `xai-sdk-version: go/<ver>` |
+| Local untagged tree | `Version()` returns `devel` |
 
-Do not invent a second public version API. `TestVersionSingleSourceOfTruth` asserts equality after import.  
-Semver / public surface policy: [`COMPATIBILITY.md`](COMPATIBILITY.md).
+Do **not** reintroduce a duplicate in-repo version number.  
+Semver policy: [`COMPATIBILITY.md`](COMPATIBILITY.md).
 
 ## Before tagging
 
-1. Set **`version.go`** (`xai.Version = "X.Y.Z"`).
-2. Sync **`internal/conn` default `SDKVersion`** to the same string.
-3. Fold **`CHANGELOG.md`** Unreleased into `## [X.Y.Z] — YYYY-MM-DD`.
-4. Offline gates (full list: [`CONTRIBUTING.md`](../CONTRIBUTING.md)):
+1. Fold **`CHANGELOG.md`** Unreleased notes into `## [X.Y.Z] — YYYY-MM-DD`.
+2. Offline gates ([`CONTRIBUTING.md`](../CONTRIBUTING.md)):
 
    ```bash
    make check && make race && make lint && make vuln
    ```
 
-5. Optional live smoke (API cost):
+3. Optional live smoke (API cost):
 
    ```bash
    export XAI_API_KEY=xai-...
    make integration   # or: go run ./examples/smoke
    ```
 
-6. Commit on `main`.
+4. Commit on `main` (clean tree at the commit you will tag).
 
 ## Tag and publish
+
+Tags must be annotated or lightweight **semver with a leading `v`** (Go module convention):
 
 ```bash
 git tag vX.Y.Z
@@ -40,17 +42,23 @@ git push origin main
 git push origin vX.Y.Z
 ```
 
+Consumers:
+
 ```bash
 go get github.com/fun7257/xai-sdk-go@vX.Y.Z
 ```
 
+After the tag is public, `xai.Version()` in dependent binaries reports `X.Y.Z`
+(leading `v` stripped for display/wire).
+
 ## Post-release
 
-- Confirm default CI green on the tag  
-- Dependabot: `.github/dependabot.yml` (weekly)  
-- Security process: [`SECURITY.md`](SECURITY.md)
+- Confirm default CI green on the tagged commit  
+- Dependabot: `.github/dependabot.yml`  
+- Security: [`SECURITY.md`](SECURITY.md)
 
 ## Not required
 
-- Goreleaser multi-platform binaries (this is an importable module)  
+- Hand-edited version constants or dual version files  
+- Goreleaser multi-platform binaries (importable library module)  
 - Mandatory live e2e on every PR  

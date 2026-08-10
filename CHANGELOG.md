@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- **Versioning:** releases are **git tags only** (`vX.Y.Z`). Removed hand-maintained version constant; `xai.Version()` now reports the module version from the Go module graph (`runtime/debug`), or `devel` for untagged local trees. Wire metadata still uses that value.
+
 ### Docs
 
 - **Doc consolidation:** single navigation map in root `README.md`; each topic has one primary home (GUIDE usage, PARITY design, DIFF Python diffs, CONTRIBUTING gates, RELEASE version, COMPATIBILITY stability). Slimmed overlapping tables; `ROADMAP_OSS` collapsed to completed status card.

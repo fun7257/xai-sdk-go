@@ -70,5 +70,5 @@ func TestLiveAuthAndChatSample(t *testing.T) {
 	if resp.Content() == "" {
 		t.Fatal("empty completion content")
 	}
-	t.Logf("version=%s model=%s content=%q", xai.Version, model, resp.Content())
+	t.Logf("version=%s model=%s content=%q", xai.Version(), model, resp.Content())
 }
