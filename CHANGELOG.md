@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Docs
+
+- 完备公开 API 参考：`docs/API.md`（各包函数/类型/选项说明与引用）。
+
 ### Removed
 
 - **Embed proto/generated client surface** (`third_party/.../embed.proto`, `embed*.pb.go`) — product non-goal; unused by library packages.

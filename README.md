@@ -11,6 +11,7 @@ Idiomatic Go gRPC client for the [xAI API](https://docs.x.ai).
 | Role | Start here | Details |
 |------|------------|---------|
 | **New user** | [Install & quick start](#install) below | Full params (EN+中文): [`docs/GUIDE.zh-en.md`](docs/GUIDE.zh-en.md) · Runnable: [`examples/complete/`](examples/complete/) |
+| **API 参考** | [`docs/API.md`](docs/API.md)（包/函数完备说明） | `go doc` / pkg.go.dev |
 | **API design** | [`docs/PARITY.md`](docs/PARITY.md) (principles + preferred shapes) | Domain vs Python: [`docs/DIFF.md`](docs/DIFF.md) |
 | **Stability / pb** | [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md) | Residual protos: [`docs/PROTO.md`](docs/PROTO.md) |
 | **Security** | [`docs/SECURITY.md`](docs/SECURITY.md) | — |

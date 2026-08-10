@@ -19,6 +19,7 @@ func TestProjectMarkdownLinksResolve(t *testing.T) {
 		"CHANGELOG.md",
 		"examples/README.md",
 		"docs/GUIDE.zh-en.md",
+		"docs/API.md",
 		"docs/PARITY.md",
 		"docs/DIFF.md",
 		"docs/COMPATIBILITY.md",
@@ -83,6 +84,7 @@ func TestREADMEDocMapCoversCoreRoles(t *testing.T) {
 	needles := []string{
 		"Documentation map",
 		"docs/GUIDE.zh-en.md",
+		"docs/API.md",
 		"docs/PARITY.md",
 		"docs/COMPATIBILITY.md",
 		"docs/SECURITY.md",

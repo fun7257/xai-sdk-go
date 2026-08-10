@@ -3,8 +3,7 @@
 **EN** Parameter reference and call patterns for `github.com/fun7257/xai-sdk-go`.  
 **中文** 本模块的参数说明与调用形态参考。
 
-Landing / 入口: [`../README.md`](../README.md) · Design / 设计: [`PARITY.md`](PARITY.md) · Diffs: [`DIFF.md`](DIFF.md)
-
+Landing / 入口: [`../README.md`](../README.md) · **API 全量符号**: [`API.md`](API.md) · Design: [`PARITY.md`](PARITY.md) · Diffs: [`DIFF.md`](DIFF.md)
 | | EN | 中文 |
 |--|----|------|
 | Runnable example | [`examples/complete/`](../examples/complete/) | 可运行完整示例 |
