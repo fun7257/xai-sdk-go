@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Operations (P2)
+
+- Dependabot: weekly `gomod` + `github-actions` (`.github/dependabot.yml`).
+- Collaboration: `CODEOWNERS`, issue templates (bug/feature), PR template.
+- Optional live integration smoke: `//go:build integration` under `integration/`; `make integration`; secrets-gated workflow `.github/workflows/integration.yml` (never required on offline PR CI).
+- Release checklist: `docs/RELEASE.md`; `xai.Version` documented as single public version source of truth (wire metadata via `init`).
+
 ### Expression & correctness (P1)
 
 - Exported sentinel errors: `ErrNoAPIKey`, `ErrEmptyAPIKey`, `ErrNoManagementKey` (usable with `errors.Is`; construction paths wrap with `%w`).

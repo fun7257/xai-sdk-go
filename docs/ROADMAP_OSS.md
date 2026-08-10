@@ -28,14 +28,14 @@ hardens toward **L3 (senior expression)** without another Python-alignment pass.
 | P1.4 | Panic factories | Documented panic contract; `New*` error path + panic tests |
 | P1.5 | CHANGELOG hygiene | Unreleased records P1; no deleted plan docs as active process |
 
-### P2 — Operations (optional hardening)
+### P2 — Operations (**done**)
 
 | # | Task | Acceptance |
 |---|------|------------|
-| P2.1 | Dependabot / Renovate | Module + Actions updates |
-| P2.2 | CODEOWNERS + issue/PR templates | GitHub collaboration surface |
-| P2.3 | Integration smoke | `//go:build integration` optional job with secrets |
-| P2.4 | Release automation | Tag checklist or goreleaser; `xai.Version` single source of truth |
+| P2.1 | Dependabot | Weekly `gomod` + `github-actions` in `.github/dependabot.yml` |
+| P2.2 | CODEOWNERS + issue/PR templates | `.github/CODEOWNERS`, ISSUE_TEMPLATE, pull_request_template |
+| P2.3 | Integration smoke | `//go:build integration`, `make integration`, secrets-gated workflow |
+| P2.4 | Release path | `docs/RELEASE.md`; `xai.Version` single public version source |
 
 ## Wave status
 
@@ -43,7 +43,7 @@ hardens toward **L3 (senior expression)** without another Python-alignment pass.
 |------|--------|
 | P0 / Wave 1 | **Done** — governance docs, CI/Makefile gates, zero-pkg tests, lint+vuln clean, local git |
 | P1 / Wave 2 | **Done** — sentinels, Example*, coverage floors, panic factory docs |
-| P2 / Wave 3 | Planned (Dependabot, templates, integration smoke, release automation) |
+| P2 / Wave 3 | **Done** — Dependabot, collab templates, integration smoke, release checklist |
 
 ## Non-goals
 

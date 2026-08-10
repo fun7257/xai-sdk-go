@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest an API or DX improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests should fit the Go-first SDK design (see `docs/PARITY.md` / `docs/DIFF.md`).
+        Out of scope by default: Embed client, OpenAI REST, OAuth, Python dual-stack clones.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / use case
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API or behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

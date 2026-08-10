@@ -1,4 +1,4 @@
-.PHONY: proto test vet fmt examples race lint vuln check
+.PHONY: proto test vet fmt examples race lint vuln check integration
 
 # Regenerate xai/api/v1 from third_party protos. See docs/PROTO.md.
 # Requires: protoc, protoc-gen-go, protoc-gen-go-grpc
@@ -50,5 +50,10 @@ vuln:
 		go run golang.org/x/vuln/cmd/govulncheck@latest ./...; \
 	fi
 
-# Full local gate (matches CI intent).
+# Full local gate (matches CI intent). Offline only — no live API.
 check: vet test examples
+
+# Optional live smoke (requires XAI_API_KEY). Not part of default CI.
+# Without a key, tests Skip. See docs/RELEASE.md and integration/.
+integration:
+	go test -tags=integration ./integration/ -count=1 -v -timeout 5m

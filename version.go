@@ -5,5 +5,8 @@
 // Client.Collections. Version is sent as the xai-sdk-version metadata value.
 package xai
 
-// Version is the SDK semantic version (semver). Bump with CHANGELOG entries.
+// Version is the SDK semantic version (semver) and the single public version
+// source of truth. Bump this for releases (see docs/RELEASE.md) together with
+// CHANGELOG and the matching default in internal/conn (wire metadata).
+// Root package init copies Version into conn.SDKVersion for gRPC metadata.
 const Version = "0.2.0"

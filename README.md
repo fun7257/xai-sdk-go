@@ -8,6 +8,7 @@ Idiomatic Go gRPC client for the [xAI API](https://docs.x.ai). **Go call UX firs
 - Security reporting: [`docs/SECURITY.md`](docs/SECURITY.md)
 - Proto residual: [`docs/PROTO.md`](docs/PROTO.md)
 - OSS roadmap: [`docs/ROADMAP_OSS.md`](docs/ROADMAP_OSS.md)
+- Release checklist: [`docs/RELEASE.md`](docs/RELEASE.md)
 
 **Module:** `github.com/fun7257/xai-sdk-go` · **Go:** 1.26+ · **License:** Apache-2.0
 
@@ -144,13 +145,20 @@ SMOKE_SKIP_VIDEO=1 go run ./examples/smoke
 ## Tests and quality gates
 
 ```bash
-make check   # vet + test + examples build
+make check   # vet + test + examples build (offline)
 make race    # race on concurrent packages
 make lint    # golangci-lint
 make vuln    # govulncheck
 ```
 
-CI runs the same gates (see `.github/workflows/ci.yaml`).
+CI runs the same offline gates (see `.github/workflows/ci.yaml`).
+
+Optional live smoke (skips without `XAI_API_KEY`; not required for PRs):
+
+```bash
+export XAI_API_KEY=xai-...
+make integration
+```
 
 ## Proto
 
