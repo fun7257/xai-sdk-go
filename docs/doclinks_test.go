@@ -82,10 +82,14 @@ func TestREADMEDocMapCoversCoreRoles(t *testing.T) {
 	}
 	s := string(data)
 	needles := []string{
-		"## Contents",
 		"## Install",
 		"## Quick start",
+		"## Core patterns",
+		"## Packages",
 		"## Documentation",
+		"## Examples",
+		"## Versioning & CI",
+		"## Contributing",
 		"docs/GUIDE.zh-en.md",
 		"docs/API.md",
 		"docs/PARITY.md",
