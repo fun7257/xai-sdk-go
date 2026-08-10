@@ -17,7 +17,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func init() { conn.SDKVersion = Version }
+func init() { conn.SDKVersion = Version() }
 
 // Client is the single entry point for the xAI API.
 type Client struct {

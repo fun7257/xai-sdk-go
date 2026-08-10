@@ -10,9 +10,9 @@ Remediation waves **P0–P2 are complete**. This file is a **status card**, not 
 
 ## What “done” means
 
-- **Consumers:** install, use preferred APIs, pin `xai.Version` / tags — see root [`README.md`](../README.md) and [`GUIDE.zh-en.md`](GUIDE.zh-en.md).
+- **Consumers:** install with a **git tag** (`go get …@vX.Y.Z`); see root [`README.md`](../README.md) and [`GUIDE.zh-en.md`](GUIDE.zh-en.md).
 - **Contributors:** offline gates in [`CONTRIBUTING.md`](../CONTRIBUTING.md).
-- **Maintainers:** ship via [`RELEASE.md`](RELEASE.md).
+- **Maintainers:** ship by tagging — [`RELEASE.md`](RELEASE.md) (no hand-maintained version file).
 
 ## Explicit non-goals (still)
 

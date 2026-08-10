@@ -239,4 +239,4 @@ What it demonstrates / 演示内容:
 
 Offline gates / 离线门禁: [`../CONTRIBUTING.md`](../CONTRIBUTING.md) (`make check`, lint, vuln, race).  
 Live smoke / 真网可选: `make integration` (needs `XAI_API_KEY`).  
-Version / 版本: **`xai.Version`** only — [`RELEASE.md`](RELEASE.md).
+Version / 版本: **git tags** (`vX.Y.Z`); runtime **`xai.Version()`** — [`RELEASE.md`](RELEASE.md).

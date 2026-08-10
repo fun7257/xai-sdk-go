@@ -72,7 +72,7 @@ func main() {
 		}
 	}()
 
-	fmt.Printf("SDK version / SDK 版本: %s\n", xai.Version)
+	fmt.Printf("SDK version / SDK 版本: %s\n", xai.Version())
 	fmt.Println(strings.Repeat("-", 60))
 
 	model := envOr("XAI_MODEL", types.ModelGrok3)

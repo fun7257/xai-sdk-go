@@ -15,9 +15,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// SDKVersion is set by the root package init to xai.Version.
-// Default matches version.go so metadata stays correct if init order differs.
-var SDKVersion = "0.2.0"
+// SDKVersion is the SDK version string embedded in gRPC metadata
+// (xai-sdk-version: go/<SDKVersion>). Root package init sets this from
+// [github.com/fun7257/xai-sdk-go.Version], which resolves the module version
+// from the Go module graph / git tags (not a hand-maintained constant).
+var SDKVersion = "devel"
 
 // ResolveAPIKey returns an explicit key or XAI_API_KEY.
 // Missing key paths wrap [ErrNoAPIKey] for errors.Is.

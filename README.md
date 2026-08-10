@@ -3,8 +3,7 @@
 Idiomatic Go gRPC client for the [xAI API](https://docs.x.ai).  
 **Go call UX first** — product capability without cloning Python API shapes.
 
-**Module:** `github.com/fun7257/xai-sdk-go` · **Go:** 1.26+ · **License:** Apache-2.0 · **Version:** `xai.Version` (`0.2.0`)
-
+**Module:** `github.com/fun7257/xai-sdk-go` · **Go:** 1.26+ · **License:** Apache-2.0 · **Release:** git tags (`vX.Y.Z`); runtime `xai.Version()`
 ---
 
 ## Documentation map
@@ -109,5 +108,5 @@ go run ./examples/complete   # annotated end-to-end
 ## Develop & release
 
 Offline gates and PR process: **[`CONTRIBUTING.md`](CONTRIBUTING.md)** (`make check`, lint, vuln, race).  
-Ship tags / version source of truth: **[`docs/RELEASE.md`](docs/RELEASE.md)** (`xai.Version` only).  
+Ship with **git tags** only: **[`docs/RELEASE.md`](docs/RELEASE.md)** (no hand-maintained version constant).  
 Report vulnerabilities: **[`docs/SECURITY.md`](docs/SECURITY.md)**.

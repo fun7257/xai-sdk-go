@@ -109,7 +109,7 @@ func main() {
 	}
 
 	var failed int
-	fmt.Printf("xai-sdk-go smoke  version=%s\n", xai.Version)
+	fmt.Printf("xai-sdk-go smoke  version=%s\n", xai.Version())
 	fmt.Printf("  chat=%s  image=%s  video=%s\n", chatModel, imageModel, videoModel)
 	fmt.Println(strings.Repeat("-", 60))
 	for _, s := range steps {

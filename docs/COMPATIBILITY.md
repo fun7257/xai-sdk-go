@@ -5,18 +5,18 @@
 | Channel | Policy |
 |---------|--------|
 | Module | `github.com/fun7257/xai-sdk-go` |
-| Series | **v0.x** — public constant [`xai.Version`](../version.go) (currently `0.2.0`) |
-| Pre-v1 | **Breaking changes allowed** on minor bumps when needed for correctness or Go UX; prefer deprecations when practical |
+| Series | **v0.x** — versions are **git tags** (`v0.2.0`, …); see [`RELEASE.md`](RELEASE.md) |
+| Pre-v1 | **Breaking changes allowed** on minor tags when needed for correctness or Go UX; prefer deprecations when practical |
 | Future v1 | Intended stability floor for preferred entry points in [`PARITY.md`](PARITY.md) |
 
-Always pin a module version (or commit). Read [`CHANGELOG.md`](../CHANGELOG.md) when upgrading.  
-Release process and version single source of truth: [`RELEASE.md`](RELEASE.md).
+Always pin a module version (or commit) in `go.mod`. Read [`CHANGELOG.md`](../CHANGELOG.md) when upgrading.  
+Runtime report: `xai.Version()` (from the module graph / tag, not a hand-maintained constant).
 
 ## Public surface
 
 **Supported for applications:**
 
-- Root `xai`: `NewClient`, `Option`s, `Client` domains, `Close`, `Version`
+- Root `xai`: `NewClient`, `Option`s, `Client` domains, `Close`, `Version()` (module/tag version)
 - Sentinels: `ErrNoAPIKey`, `ErrEmptyAPIKey`, `ErrNoManagementKey` (`errors.Is`)
 - Domains: `chat`, `image`, `video`, `files`, `batch`, `collections`, `tools`, `search`, `telemetry`, `types`, `auth`, `models`, `tokenize`
 - Preferred call shapes — [`PARITY.md`](PARITY.md); parameters — [`GUIDE.zh-en.md`](GUIDE.zh-en.md)

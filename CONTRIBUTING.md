@@ -63,7 +63,8 @@ PR template: [`.github/pull_request_template.md`](.github/pull_request_template.
 ## Security & release
 
 - Security: [`docs/SECURITY.md`](docs/SECURITY.md) — never commit `.env` or keys  
-- Release / `xai.Version`: [`docs/RELEASE.md`](docs/RELEASE.md)  
+- Release via **git tag** (`vX.Y.Z`); runtime `xai.Version()`: [`docs/RELEASE.md`](docs/RELEASE.md)  
+
 - Usage reference: [`docs/GUIDE.zh-en.md`](docs/GUIDE.zh-en.md)
 
 ## License

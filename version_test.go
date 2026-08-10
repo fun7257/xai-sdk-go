@@ -1,23 +1,35 @@
 package xai_test
 
 import (
+	"strings"
 	"testing"
 
 	xai "github.com/fun7257/xai-sdk-go"
 	"github.com/fun7257/xai-sdk-go/internal/conn"
 )
 
-// Version is the single public version constant; dial metadata uses it after init.
-func TestVersionSingleSourceOfTruth(t *testing.T) {
-	if xai.Version == "" {
-		t.Fatal("xai.Version must be non-empty")
+func TestVersionFromModuleGraph(t *testing.T) {
+	v := xai.Version()
+	if v == "" {
+		t.Fatal("Version() must be non-empty")
 	}
-	if conn.SDKVersion != xai.Version {
-		t.Fatalf("conn.SDKVersion=%q != xai.Version=%q (wire metadata must track Version)",
-			conn.SDKVersion, xai.Version)
+	// In-repo go test is almost always untagged → "devel".
+	// When this module is required at a tag, consumers get that tag (no leading v).
+	if v != "devel" && strings.Contains(v, " ") {
+		t.Fatalf("unexpected Version %q", v)
 	}
-	// Semver-ish: at least major.minor.patch digits
-	if len(xai.Version) < 5 {
-		t.Fatalf("Version looks too short: %q", xai.Version)
+	if conn.SDKVersion != v {
+		t.Fatalf("conn.SDKVersion=%q != Version()=%q (wire metadata must track module version)",
+			conn.SDKVersion, v)
+	}
+}
+
+func TestNormalizeModuleVersion(t *testing.T) {
+	// Drive through public Version() resolution indirectly via known BuildInfo
+	// behavior is hard; test normalize via metadata consistency only.
+	// Ensure Version is stable across repeated calls (sync.Once).
+	a, b := xai.Version(), xai.Version()
+	if a != b {
+		t.Fatalf("Version() not stable: %q vs %q", a, b)
 	}
 }
