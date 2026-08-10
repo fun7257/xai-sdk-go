@@ -17,10 +17,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fun7257/xai-sdk-go/telemetry"
-	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
 	"go.opentelemetry.io/otel/attribute"
 	"google.golang.org/grpc"
+
+	"github.com/fun7257/xai-sdk-go/telemetry"
+	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
 )
 
 const chunkSize = 3 << 20 // 3 MiB

@@ -10,11 +10,12 @@ import (
 	"log"
 	"os"
 
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+
 	xai "github.com/fun7257/xai-sdk-go"
 	"github.com/fun7257/xai-sdk-go/chat"
 	"github.com/fun7257/xai-sdk-go/telemetry"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func main() {

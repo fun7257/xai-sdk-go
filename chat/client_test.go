@@ -8,12 +8,13 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/fun7257/xai-sdk-go/chat"
 	"github.com/fun7257/xai-sdk-go/internal/testutil"
 	"github.com/fun7257/xai-sdk-go/tools"
 	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type mockChat struct {

@@ -7,13 +7,14 @@ import (
 	"io"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/fun7257/xai-sdk-go/internal/poll"
 	"github.com/fun7257/xai-sdk-go/search"
 	"github.com/fun7257/xai-sdk-go/telemetry"
 	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
-	"google.golang.org/protobuf/proto"
 )
 
 // Chat is a stateful multi-turn conversation.
@@ -61,20 +62,49 @@ type createConfig struct {
 	conversationID      string
 }
 
+// WithMessages appends initial messages to the chat session.
 func WithMessages(msgs ...*xaiv1.Message) Option {
 	return func(c *createConfig) { c.messages = append(c.messages, msgs...) }
 }
-func WithUser(u string) Option                   { return func(c *createConfig) { c.user = u } }
-func WithMaxTokens(n int32) Option               { return func(c *createConfig) { c.maxTokens = &n } }
-func WithSeed(n int32) Option                    { return func(c *createConfig) { c.seed = &n } }
-func WithStop(s ...string) Option                { return func(c *createConfig) { c.stop = s } }
-func WithTemperature(t float32) Option           { return func(c *createConfig) { c.temperature = &t } }
-func WithTopP(v float32) Option                  { return func(c *createConfig) { c.topP = &v } }
-func WithLogprobs(v bool) Option                 { return func(c *createConfig) { c.logprobs = v } }
-func WithTopLogprobs(n int32) Option             { return func(c *createConfig) { c.topLogprobs = &n } }
-func WithTools(t ...*xaiv1.Tool) Option          { return func(c *createConfig) { c.tools = t } }
+
+// WithUser sets the opaque end-user identifier for abuse monitoring.
+func WithUser(u string) Option { return func(c *createConfig) { c.user = u } }
+
+// WithMaxTokens sets the maximum number of tokens to generate.
+func WithMaxTokens(n int32) Option { return func(c *createConfig) { c.maxTokens = &n } }
+
+// WithSeed sets a deterministic sampling seed when supported by the model.
+func WithSeed(n int32) Option { return func(c *createConfig) { c.seed = &n } }
+
+// WithStop sets stop sequences that end generation when matched.
+func WithStop(s ...string) Option { return func(c *createConfig) { c.stop = s } }
+
+// WithTemperature sets sampling temperature.
+func WithTemperature(t float32) Option { return func(c *createConfig) { c.temperature = &t } }
+
+// WithTopP sets nucleus sampling top-p.
+func WithTopP(v float32) Option { return func(c *createConfig) { c.topP = &v } }
+
+// WithLogprobs enables token log probabilities in the response when supported.
+func WithLogprobs(v bool) Option { return func(c *createConfig) { c.logprobs = v } }
+
+// WithTopLogprobs sets how many top log probabilities to return per token.
+func WithTopLogprobs(n int32) Option { return func(c *createConfig) { c.topLogprobs = &n } }
+
+// WithTools registers client- or server-side tools for the session.
+func WithTools(t ...*xaiv1.Tool) Option { return func(c *createConfig) { c.tools = t } }
+
+// WithToolChoice sets how the model selects tools (auto/none/required/named).
 func WithToolChoice(tc *xaiv1.ToolChoice) Option { return func(c *createConfig) { c.toolChoice = tc } }
-func WithParallelToolCalls(v bool) Option        { return func(c *createConfig) { c.parallelToolCalls = &v } }
+
+// WithParallelToolCalls enables or disables parallel tool calls.
+func WithParallelToolCalls(v bool) Option {
+	return func(c *createConfig) { c.parallelToolCalls = &v }
+}
+
+// WithResponseFormat sets a raw response format proto.
+// Prefer WithResponseFormatText, WithResponseFormatJSONObject, or
+// WithResponseFormatJSONSchema for common cases.
 func WithResponseFormat(rf *xaiv1.ResponseFormat) Option {
 	return func(c *createConfig) { c.responseFormat = rf }
 }
@@ -99,8 +129,18 @@ func WithResponseFormatJSONSchema(schemaJSON []byte) Option {
 		Schema:     &s,
 	})
 }
-func WithFrequencyPenalty(v float32) Option { return func(c *createConfig) { c.frequencyPenalty = &v } }
-func WithPresencePenalty(v float32) Option  { return func(c *createConfig) { c.presencePenalty = &v } }
+
+// WithFrequencyPenalty sets the frequency penalty.
+func WithFrequencyPenalty(v float32) Option {
+	return func(c *createConfig) { c.frequencyPenalty = &v }
+}
+
+// WithPresencePenalty sets the presence penalty.
+func WithPresencePenalty(v float32) Option {
+	return func(c *createConfig) { c.presencePenalty = &v }
+}
+
+// WithReasoningEffort sets reasoning effort: none, low, medium (default), or high.
 func WithReasoningEffort(s string) Option {
 	return func(c *createConfig) {
 		var e xaiv1.ReasoningEffort
@@ -117,17 +157,30 @@ func WithReasoningEffort(s string) Option {
 		c.reasoningEffort = &e
 	}
 }
+
+// WithSearchParameters enables Live Search with the given parameters.
 func WithSearchParameters(p search.Parameters) Option {
 	return func(c *createConfig) { c.searchParameters = p.Proto() }
 }
+
+// WithStoreMessages requests server-side storage of messages for later retrieval.
 func WithStoreMessages(v bool) Option { return func(c *createConfig) { c.storeMessages = v } }
+
+// WithPreviousResponseID continues a stored conversation from a prior response id.
 func WithPreviousResponseID(id string) Option {
 	return func(c *createConfig) { c.previousResponseID = &id }
 }
+
+// WithUseEncryptedContent requests encrypted content fields when supported.
 func WithUseEncryptedContent(v bool) Option {
 	return func(c *createConfig) { c.useEncryptedContent = v }
 }
+
+// WithMaxTurns caps multi-turn tool loops on the server when supported.
 func WithMaxTurns(n int32) Option { return func(c *createConfig) { c.maxTurns = &n } }
+
+// WithInclude requests additional response payloads (e.g. "inline_citations",
+// "web_search_call_output", "verbose_streaming").
 func WithInclude(opts ...string) Option {
 	return func(c *createConfig) {
 		for _, o := range opts {
@@ -135,6 +188,8 @@ func WithInclude(opts ...string) Option {
 		}
 	}
 }
+
+// WithAgentCount sets the agent fan-out count (4 default, or 16).
 func WithAgentCount(n int) Option {
 	return func(c *createConfig) {
 		var a xaiv1.AgentCount
@@ -153,6 +208,7 @@ func WithAgentCount(n int) Option {
 // has no batch_request_id field; this value is not sent on Sample/Stream.
 func WithBatchRequestID(id string) Option { return func(c *createConfig) { c.batchRequestID = id } }
 
+// WithServiceTier sets the service tier: "priority" or "default".
 func WithServiceTier(tier string) Option {
 	return func(c *createConfig) {
 		if tier == "priority" {
@@ -366,7 +422,11 @@ func (ch *Chat) makeRequest(n int32) (*xaiv1.GetCompletionsRequest, error) {
 	}
 	// Clone so concurrent Sample/Stream/Defers on different n values cannot race
 	// the session's stored request (and N is not left sticky on the session).
-	req := proto.Clone(ch.req).(*xaiv1.GetCompletionsRequest)
+	cloned := proto.Clone(ch.req)
+	req, ok := cloned.(*xaiv1.GetCompletionsRequest)
+	if !ok || req == nil {
+		return nil, fmt.Errorf("clone GetCompletionsRequest: unexpected type %T", cloned)
+	}
 	if n > 0 {
 		nn := n
 		req.N = &nn

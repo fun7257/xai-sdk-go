@@ -7,14 +7,15 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	xai "github.com/fun7257/xai-sdk-go"
 	"github.com/fun7257/xai-sdk-go/batch"
 	"github.com/fun7257/xai-sdk-go/chat"
 	"github.com/fun7257/xai-sdk-go/internal/testutil"
 	"github.com/fun7257/xai-sdk-go/video"
 	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type mockAuth struct{ xaiv1.UnimplementedAuthServer }

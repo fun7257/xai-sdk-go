@@ -1,3 +1,4 @@
+// Package cost converts API usage cost ticks into USD.
 package cost
 
 // USDPerTick converts usage cost ticks to USD (1 tick == 1e-10 USD).

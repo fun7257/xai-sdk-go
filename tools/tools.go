@@ -10,8 +10,9 @@ import (
 	"strings"
 	"time"
 
-	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
 )
 
 func bp(v bool) *bool { return &v }
@@ -257,6 +258,9 @@ func WithCollectionsRetrievalMode(mode string) CollectionsSearchOption {
 
 // CollectionsSearch creates a server-side collections search tool.
 // For retrieval_mode support use CollectionsSearchOpts.
+//
+// Error is ignored because this path never sets retrieval_mode; invalid modes
+// cannot occur here. Prefer CollectionsSearchOpts when you need error returns.
 func CollectionsSearch(collectionIDs []string, limit *int32, instructions string) *xaiv1.Tool {
 	var opts []CollectionsSearchOption
 	if limit != nil {
@@ -265,7 +269,11 @@ func CollectionsSearch(collectionIDs []string, limit *int32, instructions string
 	if instructions != "" {
 		opts = append(opts, WithCollectionsInstructions(instructions))
 	}
-	t, _ := CollectionsSearchOpts(collectionIDs, opts...)
+	t, err := CollectionsSearchOpts(collectionIDs, opts...)
+	if err != nil {
+		// Unreachable without WithCollectionsRetrievalMode; keep non-error API.
+		return nil
+	}
 	return t
 }
 

@@ -15,7 +15,7 @@ make check   # vet + test + examples build
 make race    # scoped race: files, collections, chat, conn, batch
 make lint    # golangci-lint
 make vuln    # govulncheck
-gofmt -w $(find . -name '*.go' -not -path './xai/api/v1/*')
+make fmt   # goimports -local (fallback: gofmt); excludes generated xai/api/v1
 ```
 
 **How Actions are triggered** (tag / latest main / floating `dev` / daily CI / live smoke):  
@@ -59,9 +59,13 @@ PR template: [`.github/pull_request_template.md`](.github/pull_request_template.
 
 ## Style
 
-- Idiomatic Go: `context` first, functional options, errors as values
+- Match [Effective Go](https://go.dev/doc/effective_go) / [Code Review Comments](https://go.dev/wiki/CodeReviewComments); run `make fmt`
+- Import groups: stdlib, third-party, then module-local (`goimports -local github.com/fun7257/xai-sdk-go`)
+- Idiomatic Go: `context` first, functional options, errors as values (`%w` when wrapping)
+- Exported names: godoc full sentences starting with the name
 - Domain packages: thin public API; `Proto()` escape hatch for pb
 - Avoid panics on recoverable input in new code (`NewUser` vs `User` — see godoc / GUIDE)
+- No `log.Fatal` / `panic` in libraries for expected failure; examples may exit from `main`
 
 ## Security & release
 

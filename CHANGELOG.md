@@ -2,10 +2,16 @@
 
 ## Unreleased
 
+### Changed
+
+- Style pass aligned with project Go constraints: `goimports -local` import groups (stdlib → third-party → module), godoc on exported chat options/response accessors, `Client.Close` joins multi-conn errors via `errors.Join`, safer `proto.Clone` type assert, package comments for `internal/*`.
+- `make fmt` prefers `goimports -local github.com/fun7257/xai-sdk-go` (falls back to `gofmt`).
+
 ### Docs
 
 - 完备公开 API 参考：`docs/API.md`（各包函数/类型/选项说明与引用）。
 - README 英文主文档 + 中文 [`README.zh-CN.md`](README.zh-CN.md)；页内语言切换。
+- CONTRIBUTING style section documents import groups, godoc, and error-handling expectations.
 
 ### Removed
 

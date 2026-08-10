@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/fun7257/xai-sdk-go/telemetry"
 	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+
+	"github.com/fun7257/xai-sdk-go/telemetry"
 )
 
 func TestFlags(t *testing.T) {

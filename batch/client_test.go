@@ -3,9 +3,10 @@ package batch_test
 import (
 	"testing"
 
+	spb "google.golang.org/genproto/googleapis/rpc/status"
+
 	"github.com/fun7257/xai-sdk-go/batch"
 	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
-	spb "google.golang.org/genproto/googleapis/rpc/status"
 )
 
 func TestResultSucceededFailed(t *testing.T) {

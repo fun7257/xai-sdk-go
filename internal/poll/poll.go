@@ -1,3 +1,4 @@
+// Package poll provides context-aware helpers for deferred/long-running jobs.
 package poll
 
 import (

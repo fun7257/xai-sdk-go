@@ -2,7 +2,10 @@ package xai
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"google.golang.org/grpc"
 
 	"github.com/fun7257/xai-sdk-go/auth"
 	"github.com/fun7257/xai-sdk-go/batch"
@@ -14,7 +17,6 @@ import (
 	"github.com/fun7257/xai-sdk-go/models"
 	"github.com/fun7257/xai-sdk-go/tokenize"
 	"github.com/fun7257/xai-sdk-go/video"
-	"google.golang.org/grpc"
 )
 
 func init() { conn.SDKVersion = Version() }
@@ -99,16 +101,16 @@ func NewClient(opts ...Option) (*Client, error) {
 
 // Close closes connections owned by the client.
 func (c *Client) Close() error {
-	var first error
+	var errs []error
 	if c.ownsMgmt && c.management != nil {
-		if err := c.management.Close(); err != nil && first == nil {
-			first = err
+		if err := c.management.Close(); err != nil {
+			errs = append(errs, err)
 		}
 	}
 	if c.ownsAPI && c.api != nil {
-		if err := c.api.Close(); err != nil && first == nil {
-			first = err
+		if err := c.api.Close(); err != nil {
+			errs = append(errs, err)
 		}
 	}
-	return first
+	return errors.Join(errs...)
 }

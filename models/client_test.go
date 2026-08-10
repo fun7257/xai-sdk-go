@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/fun7257/xai-sdk-go/internal/testutil"
 	"github.com/fun7257/xai-sdk-go/models"
 	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type mockModels struct {

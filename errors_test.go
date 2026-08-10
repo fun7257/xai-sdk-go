@@ -4,12 +4,13 @@ import (
 	"errors"
 	"testing"
 
+	"google.golang.org/grpc"
+
 	xai "github.com/fun7257/xai-sdk-go"
 	"github.com/fun7257/xai-sdk-go/collections"
 	"github.com/fun7257/xai-sdk-go/internal/conn"
 	"github.com/fun7257/xai-sdk-go/internal/testutil"
 	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
-	"google.golang.org/grpc"
 )
 
 func TestNewClientErrNoAPIKey(t *testing.T) {

@@ -69,7 +69,7 @@ func message(role xaiv1.MessageRole, parts ...any) (*xaiv1.Message, error) {
 	return &xaiv1.Message{Role: role, Content: c}, nil
 }
 
-// MustMessage panics if err is non-nil; used by convenience factories for valid string/*Content parts.
+// mustMessage panics if err is non-nil; used by convenience factories for valid string/*Content parts.
 func mustMessage(m *xaiv1.Message, err error) *xaiv1.Message {
 	if err != nil {
 		panic(err)

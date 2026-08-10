@@ -1,3 +1,4 @@
+// Package testutil provides in-memory gRPC helpers for unit tests.
 package testutil
 
 import (

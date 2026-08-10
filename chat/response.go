@@ -39,6 +39,7 @@ func (r *Response) assistantOutput() *xaiv1.CompletionOutput {
 	return last
 }
 
+// ID returns the completion response id, or empty if unset.
 func (r *Response) ID() string {
 	if r.proto == nil {
 		return ""
@@ -46,6 +47,7 @@ func (r *Response) ID() string {
 	return r.proto.Id
 }
 
+// Content returns the assistant text content for the selected output.
 func (r *Response) Content() string {
 	if o := r.assistantOutput(); o != nil && o.Message != nil {
 		return o.Message.Content
@@ -53,6 +55,7 @@ func (r *Response) Content() string {
 	return ""
 }
 
+// ReasoningContent returns the assistant reasoning text when present.
 func (r *Response) ReasoningContent() string {
 	if o := r.assistantOutput(); o != nil && o.Message != nil {
 		return o.Message.ReasoningContent
@@ -60,6 +63,7 @@ func (r *Response) ReasoningContent() string {
 	return ""
 }
 
+// EncryptedContent returns encrypted assistant content when present.
 func (r *Response) EncryptedContent() string {
 	if o := r.assistantOutput(); o != nil && o.Message != nil {
 		return o.Message.EncryptedContent
@@ -67,6 +71,7 @@ func (r *Response) EncryptedContent() string {
 	return ""
 }
 
+// Role returns the assistant message role string for the selected output.
 func (r *Response) Role() string {
 	if o := r.assistantOutput(); o != nil && o.Message != nil {
 		return o.Message.Role.String()
@@ -74,6 +79,7 @@ func (r *Response) Role() string {
 	return ""
 }
 
+// FinishReason returns the finish reason string for the selected output.
 func (r *Response) FinishReason() string {
 	if o := r.assistantOutput(); o != nil {
 		return o.FinishReason.String()
@@ -130,6 +136,7 @@ func (r *Response) ToolOutputs() []*xaiv1.CompletionOutput {
 	return out
 }
 
+// Citations returns top-level citation URLs from the response when present.
 func (r *Response) Citations() []string {
 	if r.proto == nil {
 		return nil
@@ -158,6 +165,7 @@ func (r *Response) InlineCitations() []*xaiv1.InlineCitation {
 	return out
 }
 
+// Usage returns sampling usage statistics when present.
 func (r *Response) Usage() *xaiv1.SamplingUsage {
 	if r.proto == nil {
 		return nil
@@ -165,6 +173,7 @@ func (r *Response) Usage() *xaiv1.SamplingUsage {
 	return r.proto.Usage
 }
 
+// CostUSD returns estimated cost in USD when usage reports cost ticks.
 func (r *Response) CostUSD() (float64, bool) {
 	u := r.Usage()
 	if u == nil || u.CostInUsdTicks == nil {
@@ -173,6 +182,7 @@ func (r *Response) CostUSD() (float64, bool) {
 	return cost.FromTicks(*u.CostInUsdTicks, true)
 }
 
+// SystemFingerprint returns the system fingerprint string when present.
 func (r *Response) SystemFingerprint() string {
 	if r.proto == nil {
 		return ""
@@ -180,6 +190,7 @@ func (r *Response) SystemFingerprint() string {
 	return r.proto.SystemFingerprint
 }
 
+// ServiceTier returns "priority" or "default" for the response service tier.
 func (r *Response) ServiceTier() string {
 	if r.proto == nil {
 		return "default"
@@ -190,6 +201,7 @@ func (r *Response) ServiceTier() string {
 	return "default"
 }
 
+// ServerSideToolUsage returns counts of server-side tools used, keyed by tool name.
 func (r *Response) ServerSideToolUsage() map[string]int {
 	u := r.Usage()
 	if u == nil {
@@ -202,6 +214,7 @@ func (r *Response) ServerSideToolUsage() map[string]int {
 	return m
 }
 
+// Settings returns request settings echoed by the server when present.
 func (r *Response) Settings() *xaiv1.RequestSettings {
 	if r.proto == nil {
 		return nil
@@ -209,6 +222,7 @@ func (r *Response) Settings() *xaiv1.RequestSettings {
 	return r.proto.Settings
 }
 
+// DebugOutput returns debug payload from the response when present.
 func (r *Response) DebugOutput() *xaiv1.DebugOutput {
 	if r.proto == nil {
 		return nil
@@ -216,6 +230,7 @@ func (r *Response) DebugOutput() *xaiv1.DebugOutput {
 	return r.proto.DebugOutput
 }
 
+// Created returns the response creation time, or the zero time if unset.
 func (r *Response) Created() time.Time {
 	if r.proto == nil || r.proto.Created == nil {
 		return time.Time{}
@@ -229,12 +244,15 @@ type Chunk struct {
 	index *int
 }
 
+// NewChunk wraps a streaming completion chunk.
 func NewChunk(proto *xaiv1.GetChatCompletionChunk, index *int) *Chunk {
 	return &Chunk{proto: proto, index: index}
 }
 
+// Proto returns the underlying streaming chunk proto.
 func (c *Chunk) Proto() *xaiv1.GetChatCompletionChunk { return c.proto }
 
+// Content returns concatenated assistant text deltas in this chunk.
 func (c *Chunk) Content() string {
 	if c.proto == nil {
 		return ""
@@ -252,6 +270,7 @@ func (c *Chunk) Content() string {
 	return b.String()
 }
 
+// ReasoningContent returns concatenated reasoning deltas in this chunk.
 func (c *Chunk) ReasoningContent() string {
 	if c.proto == nil {
 		return ""
@@ -287,6 +306,7 @@ func (c *Chunk) ToolCalls() []*xaiv1.ToolCall {
 	return out
 }
 
+// Citations returns top-level citation URLs from this chunk when present.
 func (c *Chunk) Citations() []string {
 	if c.proto == nil {
 		return nil
@@ -371,8 +391,10 @@ type CompactContextResponse struct {
 	proto *xaiv1.CompactContextResponse
 }
 
+// Proto returns the underlying compaction response proto.
 func (c *CompactContextResponse) Proto() *xaiv1.CompactContextResponse { return c.proto }
 
+// EncryptedContent returns the encrypted compaction blob when present.
 func (c *CompactContextResponse) EncryptedContent() string {
 	if c.proto == nil {
 		return ""
@@ -380,6 +402,7 @@ func (c *CompactContextResponse) EncryptedContent() string {
 	return c.proto.EncryptedContent
 }
 
+// DroppedMessageCount returns how many messages were dropped during compaction.
 func (c *CompactContextResponse) DroppedMessageCount() uint32 {
 	if c.proto == nil {
 		return 0
@@ -387,6 +410,7 @@ func (c *CompactContextResponse) DroppedMessageCount() uint32 {
 	return c.proto.DroppedMessageCount
 }
 
+// ID returns the compaction response id, or empty if unset.
 func (c *CompactContextResponse) ID() string {
 	if c.proto == nil {
 		return ""

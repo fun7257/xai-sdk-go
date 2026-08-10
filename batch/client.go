@@ -4,13 +4,14 @@ package batch
 import (
 	"context"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/fun7257/xai-sdk-go/chat"
 	"github.com/fun7257/xai-sdk-go/image"
 	"github.com/fun7257/xai-sdk-go/video"
 	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Client manages batch jobs.

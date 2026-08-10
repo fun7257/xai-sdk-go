@@ -1,3 +1,4 @@
+// Package conn provides gRPC dial helpers, API key resolution, and per-RPC auth.
 package conn
 
 import (
@@ -94,6 +95,7 @@ func Dial(ctx context.Context, target, apiKey string, insecureDial bool, timeout
 	opts = append(opts, extra...)
 	// grpc.NewClient is the supported API; DialContext is deprecated.
 	// Dial is lazy; connection errors surface on the first RPC.
+	// ctx is accepted for API consistency and future dial cancellation support.
 	_ = ctx
 	return grpc.NewClient(target, opts...)
 }

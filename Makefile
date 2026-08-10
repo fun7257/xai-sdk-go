@@ -24,7 +24,11 @@ vet:
 	go vet ./...
 
 fmt:
-	gofmt -w $$(find . -name '*.go' -not -path './xai/api/v1/*')
+	@if command -v goimports >/dev/null 2>&1; then \
+		goimports -local github.com/fun7257/xai-sdk-go -w $$(find . -name '*.go' -not -path './xai/api/v1/*'); \
+	else \
+		gofmt -w $$(find . -name '*.go' -not -path './xai/api/v1/*'); \
+	fi
 
 examples:
 	go build -o /dev/null ./examples/...

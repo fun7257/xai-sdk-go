@@ -8,8 +8,9 @@ package chat
 import (
 	"context"
 
-	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
 	"google.golang.org/grpc"
+
+	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
 )
 
 // Client is the chat domain client.

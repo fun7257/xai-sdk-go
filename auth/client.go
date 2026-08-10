@@ -4,9 +4,10 @@ package auth
 import (
 	"context"
 
-	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
 )
 
 // Client retrieves API key metadata.
