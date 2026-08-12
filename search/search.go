@@ -29,9 +29,16 @@ type Parameters struct {
 	MaxSearchResults *int32
 }
 
-// Proto converts to the API message.
+// Proto converts to the API message. The Sources slice and MaxSearchResults
+// value are copied so later mutations of the Parameters do not affect the
+// built request.
 func (p Parameters) Proto() *xaiv1.SearchParameters {
-	out := &xaiv1.SearchParameters{Sources: p.Sources, Mode: modeToProto(p.Mode)}
+	var sources []*xaiv1.Source
+	if len(p.Sources) > 0 {
+		sources = make([]*xaiv1.Source, len(p.Sources))
+		copy(sources, p.Sources)
+	}
+	out := &xaiv1.SearchParameters{Sources: sources, Mode: modeToProto(p.Mode)}
 	if p.FromDate != nil {
 		out.FromDate = timestamppb.New(*p.FromDate)
 	}
@@ -44,7 +51,8 @@ func (p Parameters) Proto() *xaiv1.SearchParameters {
 		out.ReturnCitations = true
 	}
 	if p.MaxSearchResults != nil {
-		out.MaxSearchResults = p.MaxSearchResults
+		n := *p.MaxSearchResults
+		out.MaxSearchResults = &n
 	}
 	return out
 }

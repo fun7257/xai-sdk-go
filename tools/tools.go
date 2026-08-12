@@ -23,7 +23,9 @@ func sp(v string) *string {
 	return &v
 }
 
-// Function creates a client-side function tool.
+// Function creates a client-side function tool. Pre-encoded parameters
+// (string, []byte, json.RawMessage) must be valid JSON; invalid input returns
+// an error instead of being sent to the server.
 func Function(name, description string, parameters any) (*xaiv1.Tool, error) {
 	var raw []byte
 	var err error
@@ -39,6 +41,9 @@ func Function(name, description string, parameters any) (*xaiv1.Tool, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+	if !json.Valid(raw) {
+		return nil, fmt.Errorf("function %q: parameters are not valid JSON", name)
 	}
 	return &xaiv1.Tool{Tool: &xaiv1.Tool_Function{Function: &xaiv1.Function{
 		Name: name, Description: description, Parameters: string(raw),
@@ -263,24 +268,18 @@ func WithCollectionsRetrievalMode(mode string) CollectionsSearchOption {
 }
 
 // CollectionsSearch creates a server-side collections search tool.
-// For retrieval_mode support use CollectionsSearchOpts.
-//
-// Error is ignored because this path never sets retrieval_mode; invalid modes
-// cannot occur here. Prefer CollectionsSearchOpts when you need error returns.
+// For retrieval_mode support use CollectionsSearchOpts. This shape never
+// fails: it builds the tool directly and always returns a non-nil value.
 func CollectionsSearch(collectionIDs []string, limit *int32, instructions string) *xaiv1.Tool {
-	var opts []CollectionsSearchOption
+	cs := &xaiv1.CollectionsSearch{CollectionIds: collectionIDs}
 	if limit != nil {
-		opts = append(opts, WithCollectionsLimit(*limit))
+		l := *limit
+		cs.Limit = &l
 	}
 	if instructions != "" {
-		opts = append(opts, WithCollectionsInstructions(instructions))
+		cs.Instructions = &instructions
 	}
-	t, err := CollectionsSearchOpts(collectionIDs, opts...)
-	if err != nil {
-		// Unreachable without WithCollectionsRetrievalMode; keep non-error API.
-		return nil
-	}
-	return t
+	return &xaiv1.Tool{Tool: &xaiv1.Tool_CollectionsSearch{CollectionsSearch: cs}}
 }
 
 // CollectionsSearchOpts creates a CollectionsSearch tool with options.
@@ -354,8 +353,21 @@ func WithMCPAuth(s string) MCPOption { return func(c *mcpCfg) { c.auth = s } }
 // WithMCPAllowedTools limits MCP tool names.
 func WithMCPAllowedTools(n ...string) MCPOption { return func(c *mcpCfg) { c.allowed = n } }
 
-// WithMCPHeaders sets extra headers.
-func WithMCPHeaders(h map[string]string) MCPOption { return func(c *mcpCfg) { c.headers = h } }
+// WithMCPHeaders sets extra headers. The map is copied, so later caller
+// mutations do not affect the built tool.
+func WithMCPHeaders(h map[string]string) MCPOption {
+	return func(c *mcpCfg) {
+		if h == nil {
+			c.headers = nil
+			return
+		}
+		cp := make(map[string]string, len(h))
+		for k, v := range h {
+			cp[k] = v
+		}
+		c.headers = cp
+	}
+}
 
 // CallType returns a short tool call type string.
 func CallType(tc *xaiv1.ToolCall) string {
