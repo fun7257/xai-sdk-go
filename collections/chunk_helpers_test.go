@@ -36,3 +36,28 @@ func TestChunkConstructors(t *testing.T) {
 		t.Fatal("flags must default to false")
 	}
 }
+
+// Overlap applies to whichever strategy is active; encoding only to tokens.
+func TestChunkOverlapAndEncoding(t *testing.T) {
+	chars := collections.ChunkByChars(1000, collections.WithChunkOverlap(100))
+	if chars.GetCharsConfiguration().GetChunkOverlapChars() != 100 {
+		t.Fatalf("%+v", chars)
+	}
+	tokens := collections.ChunkByTokens(256,
+		collections.WithChunkOverlap(32),
+		collections.WithTokensEncodingName("cl100k_base"),
+	)
+	tc := tokens.GetTokensConfiguration()
+	if tc.GetChunkOverlapTokens() != 32 || tc.GetEncodingName() != "cl100k_base" {
+		t.Fatalf("%+v", tc)
+	}
+	bytes := collections.ChunkByBytes(4096, collections.WithChunkOverlap(512))
+	if bytes.GetBytesConfiguration().GetChunkOverlapBytes() != 512 {
+		t.Fatalf("%+v", bytes)
+	}
+	// Encoding name is a no-op for non-token strategies.
+	chars2 := collections.ChunkByChars(10, collections.WithTokensEncodingName("x"))
+	if chars2.GetCharsConfiguration() == nil {
+		t.Fatal("chars config lost")
+	}
+}
