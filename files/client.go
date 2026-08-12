@@ -251,7 +251,8 @@ func (c *Client) Delete(ctx context.Context, fileID string) (*xaiv1.DeleteFileRe
 }
 
 // Content downloads file bytes into memory, capped at MaxContentBytes (512 MiB).
-// For unbounded/large objects use ContentWriter.
+// For unbounded/large objects use ContentWriter. On error no partial data is
+// returned.
 func (c *Client) Content(ctx context.Context, fileID string) ([]byte, error) {
 	var buf []byte
 	err := c.ContentWriter(ctx, fileID, writerFunc(func(p []byte) (int, error) {
@@ -261,7 +262,10 @@ func (c *Client) Content(ctx context.Context, fileID string) ([]byte, error) {
 		buf = append(buf, p...)
 		return len(p), nil
 	}))
-	return buf, err
+	if err != nil {
+		return nil, err
+	}
+	return buf, nil
 }
 
 // writerFunc adapts a function to io.Writer.

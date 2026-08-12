@@ -17,6 +17,9 @@ type StorageOptions struct {
 }
 
 // Proto converts StorageOptions to the API message. Returns nil if o is nil.
+// A non-nil zero value still produces an (empty) message: passing
+// StorageOptions{} to WithStorage explicitly requests storage with server
+// defaults rather than disabling it.
 func (o *StorageOptions) Proto() *xaiv1.StorageOptions {
 	if o == nil {
 		return nil
