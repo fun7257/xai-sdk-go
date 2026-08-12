@@ -131,6 +131,16 @@ func Developer(parts ...any) *xaiv1.Message {
 	return mustMessage(message(xaiv1.MessageRole_ROLE_DEVELOPER, parts...))
 }
 
+// Named sets the participant name on a message and returns the same message
+// for inline use, e.g. chat.Named(chat.User("hi"), "alice"). The name
+// distinguishes participants of the same role in multi-party conversations.
+func Named(m *xaiv1.Message, name string) *xaiv1.Message {
+	if m != nil {
+		m.Name = name
+	}
+	return m
+}
+
 // ToolResult builds a tool-role message.
 func ToolResult(result string, toolCallID string) *xaiv1.Message {
 	m := &xaiv1.Message{
