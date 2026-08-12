@@ -353,4 +353,4 @@ go doc github.com/fun7257/xai-sdk-go/xai/api/v1
 ```
 
 pkg.go.dev（发版 tag 后）：  
-`https://pkg.go.dev/github.com/fun7257/xai-sdk-go@v0.2.0`
+`https://pkg.go.dev/github.com/fun7257/xai-sdk-go@v0.3.0`

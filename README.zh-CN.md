@@ -32,7 +32,7 @@ module   github.com/fun7257/xai-sdk-go
 ## 安装
 
 ```bash
-go get github.com/fun7257/xai-sdk-go@v0.2.0
+go get github.com/fun7257/xai-sdk-go@v0.3.0
 ```
 
 <details>

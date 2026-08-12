@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [0.3.0] — 2026-08-12
+
+Wire-alignment release: the vendored collections/files protos are now field-for-field identical to the official xAI API schema (#14), plus the remaining API-completeness gaps (#13) and automated release notes (#12).
+
 ### Fixed — wire alignment with the official API (breaking)
 
 Vendored protos for collections/files had drifted from the official schema (verified against the official Python SDK `proto/v6` descriptors and their git history): reserved field numbers had been compacted, so several requests were misread or dropped server-side and several responses were misread client-side. Aligned:
