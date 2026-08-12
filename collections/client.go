@@ -63,12 +63,16 @@ func (c *Client) Create(ctx context.Context, name string, opts ...CreateOption) 
 	if err := ValidateChunkConfiguration(cfg.chunk); err != nil {
 		return nil, err
 	}
+	metric, err := hnswMetric(cfg.metricStr, cfg.metricSet)
+	if err != nil {
+		return nil, err
+	}
 	return c.mgmt.CreateCollection(ctx, &xaiv1.CreateCollectionRequest{
 		CollectionName:        name,
 		CollectionDescription: cfg.description,
 		IndexConfiguration:    cfg.index,
 		ChunkConfiguration:    cfg.chunk,
-		MetricSpace:           cfg.metric,
+		MetricSpace:           metric,
 		FieldDefinitions:      cfg.fields,
 	})
 }
@@ -79,7 +83,8 @@ type createCfg struct {
 	description string
 	index       *xaiv1.IndexConfiguration
 	chunk       *xaiv1.ChunkConfiguration
-	metric      xaiv1.HNSWMetric
+	metricStr   string
+	metricSet   bool
 	fields      []*xaiv1.FieldDefinition
 }
 
@@ -96,17 +101,28 @@ func WithChunkConfiguration(ch *xaiv1.ChunkConfiguration) CreateOption {
 	return func(c *createCfg) { c.chunk = ch }
 }
 
-// WithMetric sets HNSW metric: cosine (default), euclidean, or inner_product.
+// WithMetric sets HNSW metric: "cosine" (default), "euclidean", or "inner_product".
+// Unknown values cause Create to return an error (no silent fallback).
 func WithMetric(m string) CreateOption {
 	return func(c *createCfg) {
-		switch m {
-		case "euclidean":
-			c.metric = xaiv1.HNSWMetric_HNSW_METRIC_EUCLIDEAN
-		case "inner_product":
-			c.metric = xaiv1.HNSWMetric_HNSW_METRIC_INNER_PRODUCT
-		default:
-			c.metric = xaiv1.HNSWMetric_HNSW_METRIC_COSINE
-		}
+		c.metricStr = m
+		c.metricSet = true
+	}
+}
+
+func hnswMetric(s string, set bool) (xaiv1.HNSWMetric, error) {
+	if !set {
+		return xaiv1.HNSWMetric_HNSW_METRIC_UNKNOWN, nil
+	}
+	switch s {
+	case "", "cosine":
+		return xaiv1.HNSWMetric_HNSW_METRIC_COSINE, nil
+	case "euclidean":
+		return xaiv1.HNSWMetric_HNSW_METRIC_EUCLIDEAN, nil
+	case "inner_product":
+		return xaiv1.HNSWMetric_HNSW_METRIC_INNER_PRODUCT, nil
+	default:
+		return 0, fmt.Errorf("collections: unknown metric %q (want cosine, euclidean, or inner_product)", s)
 	}
 }
 
@@ -310,7 +326,11 @@ func (c *Client) UploadDocument(ctx context.Context, collectionID, path string, 
 	}
 	if err := c.AddExistingDocument(ctx, collectionID, f.Id, cfg.fields); err != nil {
 		if cfg.deleteOnAddFailure {
-			_, _ = c.files.Delete(ctx, f.Id)
+			// Detach from ctx so cleanup still runs when the add failed due to
+			// cancellation/deadline; bound it so it cannot hang.
+			cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+			defer cancel()
+			_, _ = c.files.Delete(cleanupCtx, f.Id)
 		}
 		return f, nil, err
 	}
