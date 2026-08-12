@@ -5,7 +5,6 @@ import (
 	"context"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/fun7257/xai-sdk-go/chat"
@@ -144,6 +143,8 @@ func (r *Result) Failed() bool {
 }
 
 // Error returns a gRPC status error when Failed, else nil.
+// The full status proto is preserved, so structured details remain available
+// via status.Convert(err).Details().
 func (r *Result) Error() error {
 	if !r.Failed() {
 		return nil
@@ -152,7 +153,7 @@ func (r *Result) Error() error {
 	if st == nil {
 		return nil
 	}
-	return status.Error(codes.Code(st.Code), st.Message)
+	return status.FromProto(st).Err()
 }
 
 func (r *Result) responseData() *xaiv1.BatchResultData {
