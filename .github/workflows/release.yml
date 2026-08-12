@@ -1,0 +1,94 @@
+# GitHub Release notes for version tags.
+#
+# Triggers:
+#   - push tags v*        — publish a Release whose body is the matching
+#                           `## [X.Y.Z] — date` section of CHANGELOG.md
+#   - workflow_dispatch   — backfill/refresh notes for an existing tag
+#                           (input: tag, e.g. v0.2.0)
+#
+# Body source: CHANGELOG.md section for the version. Falls back to GitHub
+# auto-generated notes when the section is missing. Editing CHANGELOG and
+# re-running via dispatch updates the published notes.
+# See docs/RELEASE.md.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing version tag to (re)publish notes for (e.g. v0.2.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  notes:
+    name: publish release notes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve tag
+        id: tag
+        env:
+          DISPATCH_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="$DISPATCH_TAG"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
+          case "$TAG" in
+            v*) ;;
+            *) echo "not a version tag: $TAG" >&2; exit 1 ;;
+          esac
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
+
+      - name: Extract CHANGELOG section
+        id: notes
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.tag.outputs.tag }}"
+          VERSION="${TAG#v}"
+          awk -v ver="$VERSION" '
+            index($0, "## [" ver "]") == 1 {grab=1; next}
+            grab && /^## / {exit}
+            grab {print}
+          ' CHANGELOG.md > body.md
+          # Trim leading blank lines for a clean release body.
+          sed -i '/./,$!d' body.md
+          if [ -s body.md ]; then
+            echo "has_section=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_section=false" >> "$GITHUB_OUTPUT"
+            echo "No CHANGELOG section for $VERSION; will use auto-generated notes."
+          fi
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.tag.outputs.tag }}"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            if [ "${{ steps.notes.outputs.has_section }}" = "true" ]; then
+              gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" --notes-file body.md
+              echo "Updated release notes for $TAG from CHANGELOG."
+            else
+              echo "Release $TAG exists and CHANGELOG has no section; leaving as-is."
+            fi
+          else
+            if [ "${{ steps.notes.outputs.has_section }}" = "true" ]; then
+              gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" --notes-file body.md
+            else
+              gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" --generate-notes
+            fi
+            echo "Created release $TAG."
+          fi

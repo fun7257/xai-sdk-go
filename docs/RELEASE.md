@@ -43,7 +43,13 @@ git push origin main
 git push origin vX.Y.Z
 ```
 
-Pushing `v*` runs the **ci** workflow on that tag (offline suite).  
+Pushing `v*` runs the **ci** workflow on that tag (offline suite) and the
+**release** workflow, which publishes a GitHub Release whose notes are the
+matching `## [X.Y.Z] — YYYY-MM-DD` section of `CHANGELOG.md` (auto-generated
+notes if the section is missing). To backfill or refresh notes for an existing
+tag, run the **release** workflow manually (Actions → release → Run workflow →
+tag, e.g. `v0.2.0`).
+
 Consumers:
 
 ```bash

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **release workflow** (`.github/workflows/release.yml`): pushing a `v*` tag now publishes a GitHub Release whose notes are the matching `CHANGELOG.md` section (auto-generated notes as fallback); manual dispatch backfills or refreshes notes for existing tags.
+
 ## [0.2.0] — 2026-08-12
 
 Audit-driven release: high/medium findings fixed (#9), low-severity follow-ups (#10), API completeness (#11), plus test-coverage and CI improvements.
