@@ -175,6 +175,18 @@ func TestUpdateCollection(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "chunk configuration") {
 		t.Fatalf("expected chunk validation error, got: %v", err)
 	}
+
+	// The caller's request must not be mutated (id is set on a clone).
+	callerReq := &xaiv1.UpdateCollectionRequest{CollectionName: "keep"}
+	if _, err = cli.Update(ctx, "c9", callerReq); err != nil {
+		t.Fatalf("Update: %v", err)
+	}
+	if callerReq.GetCollectionId() != "" {
+		t.Fatalf("caller request mutated: %+v", callerReq)
+	}
+	if mock.lastUpdate.GetCollectionId() != "c9" || mock.lastUpdate.GetCollectionName() != "keep" {
+		t.Fatalf("clone wire=%+v", mock.lastUpdate)
+	}
 }
 
 // Every management method must fail with ErrNoManagementKey when the client

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/fun7257/xai-sdk-go/files"
 	"github.com/fun7257/xai-sdk-go/internal/poll"
@@ -227,7 +228,8 @@ func (c *Client) Delete(ctx context.Context, collectionID string) error {
 	return err
 }
 
-// Update updates a collection.
+// Update updates a collection. The caller's req is not mutated; the collection
+// id is set on an internal clone.
 func (c *Client) Update(ctx context.Context, collectionID string, req *xaiv1.UpdateCollectionRequest) (*xaiv1.CollectionMetadata, error) {
 	if err := c.requireMgmt(); err != nil {
 		return nil, err
@@ -238,8 +240,12 @@ func (c *Client) Update(ctx context.Context, collectionID string, req *xaiv1.Upd
 	if err := ValidateChunkConfiguration(req.ChunkConfiguration); err != nil {
 		return nil, err
 	}
-	req.CollectionId = collectionID
-	return c.mgmt.UpdateCollection(ctx, req)
+	cloned, ok := proto.Clone(req).(*xaiv1.UpdateCollectionRequest)
+	if !ok || cloned == nil {
+		return nil, fmt.Errorf("clone UpdateCollectionRequest: unexpected type")
+	}
+	cloned.CollectionId = collectionID
+	return c.mgmt.UpdateCollection(ctx, cloned)
 }
 
 // GenerateDescription generates a description for a collection.
