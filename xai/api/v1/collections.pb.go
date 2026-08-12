@@ -355,13 +355,13 @@ func (x *FieldDefinitionUpdate) GetOperation() FieldDefinitionOperation {
 
 type CreateCollectionRequest struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
-	TeamId                string                 `protobuf:"bytes,1,opt,name=team_id,json=teamId,proto3" json:"team_id,omitempty"`
+	TeamId                *string                `protobuf:"bytes,1,opt,name=team_id,json=teamId,proto3,oneof" json:"team_id,omitempty"`
 	CollectionName        string                 `protobuf:"bytes,2,opt,name=collection_name,json=collectionName,proto3" json:"collection_name,omitempty"`
-	IndexConfiguration    *IndexConfiguration    `protobuf:"bytes,3,opt,name=index_configuration,json=indexConfiguration,proto3" json:"index_configuration,omitempty"`
-	ChunkConfiguration    *ChunkConfiguration    `protobuf:"bytes,4,opt,name=chunk_configuration,json=chunkConfiguration,proto3" json:"chunk_configuration,omitempty"`
-	MetricSpace           HNSWMetric             `protobuf:"varint,5,opt,name=metric_space,json=metricSpace,proto3,enum=xai_api.HNSWMetric" json:"metric_space,omitempty"`
-	FieldDefinitions      []*FieldDefinition     `protobuf:"bytes,6,rep,name=field_definitions,json=fieldDefinitions,proto3" json:"field_definitions,omitempty"`
-	CollectionDescription string                 `protobuf:"bytes,7,opt,name=collection_description,json=collectionDescription,proto3" json:"collection_description,omitempty"`
+	IndexConfiguration    *IndexConfiguration    `protobuf:"bytes,4,opt,name=index_configuration,json=indexConfiguration,proto3,oneof" json:"index_configuration,omitempty"`
+	ChunkConfiguration    *ChunkConfiguration    `protobuf:"bytes,5,opt,name=chunk_configuration,json=chunkConfiguration,proto3,oneof" json:"chunk_configuration,omitempty"`
+	MetricSpace           *HNSWMetric            `protobuf:"varint,7,opt,name=metric_space,json=metricSpace,proto3,enum=xai_api.HNSWMetric,oneof" json:"metric_space,omitempty"`
+	FieldDefinitions      []*FieldDefinition     `protobuf:"bytes,9,rep,name=field_definitions,json=fieldDefinitions,proto3" json:"field_definitions,omitempty"`
+	CollectionDescription *string                `protobuf:"bytes,10,opt,name=collection_description,json=collectionDescription,proto3,oneof" json:"collection_description,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -397,8 +397,8 @@ func (*CreateCollectionRequest) Descriptor() ([]byte, []int) {
 }
 
 func (x *CreateCollectionRequest) GetTeamId() string {
-	if x != nil {
-		return x.TeamId
+	if x != nil && x.TeamId != nil {
+		return *x.TeamId
 	}
 	return ""
 }
@@ -425,8 +425,8 @@ func (x *CreateCollectionRequest) GetChunkConfiguration() *ChunkConfiguration {
 }
 
 func (x *CreateCollectionRequest) GetMetricSpace() HNSWMetric {
-	if x != nil {
-		return x.MetricSpace
+	if x != nil && x.MetricSpace != nil {
+		return *x.MetricSpace
 	}
 	return HNSWMetric_HNSW_METRIC_UNKNOWN
 }
@@ -439,8 +439,8 @@ func (x *CreateCollectionRequest) GetFieldDefinitions() []*FieldDefinition {
 }
 
 func (x *CreateCollectionRequest) GetCollectionDescription() string {
-	if x != nil {
-		return x.CollectionDescription
+	if x != nil && x.CollectionDescription != nil {
+		return *x.CollectionDescription
 	}
 	return ""
 }
@@ -453,9 +453,9 @@ type CollectionMetadata struct {
 	IndexConfiguration    *IndexConfiguration    `protobuf:"bytes,4,opt,name=index_configuration,json=indexConfiguration,proto3" json:"index_configuration,omitempty"`
 	ChunkConfiguration    *ChunkConfiguration    `protobuf:"bytes,5,opt,name=chunk_configuration,json=chunkConfiguration,proto3" json:"chunk_configuration,omitempty"`
 	DocumentsCount        int32                  `protobuf:"varint,6,opt,name=documents_count,json=documentsCount,proto3" json:"documents_count,omitempty"`
-	FieldDefinitions      []*FieldDefinition     `protobuf:"bytes,7,rep,name=field_definitions,json=fieldDefinitions,proto3" json:"field_definitions,omitempty"`
-	CollectionDescription string                 `protobuf:"bytes,8,opt,name=collection_description,json=collectionDescription,proto3" json:"collection_description,omitempty"`
-	TotalFileSize         int64                  `protobuf:"varint,9,opt,name=total_file_size,json=totalFileSize,proto3" json:"total_file_size,omitempty"`
+	FieldDefinitions      []*FieldDefinition     `protobuf:"bytes,8,rep,name=field_definitions,json=fieldDefinitions,proto3" json:"field_definitions,omitempty"`
+	CollectionDescription *string                `protobuf:"bytes,9,opt,name=collection_description,json=collectionDescription,proto3,oneof" json:"collection_description,omitempty"`
+	TotalFileSize         int64                  `protobuf:"varint,10,opt,name=total_file_size,json=totalFileSize,proto3" json:"total_file_size,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -540,8 +540,8 @@ func (x *CollectionMetadata) GetFieldDefinitions() []*FieldDefinition {
 }
 
 func (x *CollectionMetadata) GetCollectionDescription() string {
-	if x != nil {
-		return x.CollectionDescription
+	if x != nil && x.CollectionDescription != nil {
+		return *x.CollectionDescription
 	}
 	return ""
 }
@@ -1224,9 +1224,9 @@ func (x *GetDocumentMetadataRequest) GetCollectionId() string {
 type AddDocumentToCollectionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FileId        string                 `protobuf:"bytes,1,opt,name=file_id,json=fileId,proto3" json:"file_id,omitempty"`
-	TeamId        string                 `protobuf:"bytes,2,opt,name=team_id,json=teamId,proto3" json:"team_id,omitempty"`
+	TeamId        *string                `protobuf:"bytes,2,opt,name=team_id,json=teamId,proto3,oneof" json:"team_id,omitempty"`
 	CollectionId  string                 `protobuf:"bytes,3,opt,name=collection_id,json=collectionId,proto3" json:"collection_id,omitempty"`
-	Fields        map[string]string      `protobuf:"bytes,4,rep,name=fields,proto3" json:"fields,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Fields        map[string]string      `protobuf:"bytes,5,rep,name=fields,proto3" json:"fields,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1269,8 +1269,8 @@ func (x *AddDocumentToCollectionRequest) GetFileId() string {
 }
 
 func (x *AddDocumentToCollectionRequest) GetTeamId() string {
-	if x != nil {
-		return x.TeamId
+	if x != nil && x.TeamId != nil {
+		return *x.TeamId
 	}
 	return ""
 }
@@ -1734,10 +1734,10 @@ func (x *GenerateCollectionDescriptionRequest) GetCollectionId() string {
 }
 
 type GenerateCollectionDescriptionResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Description   string                 `protobuf:"bytes,1,opt,name=description,proto3" json:"description,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	CollectionDescription string                 `protobuf:"bytes,1,opt,name=collection_description,json=collectionDescription,proto3" json:"collection_description,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *GenerateCollectionDescriptionResponse) Reset() {
@@ -1770,9 +1770,9 @@ func (*GenerateCollectionDescriptionResponse) Descriptor() ([]byte, []int) {
 	return file_xai_api_v1_collections_proto_rawDescGZIP(), []int{21}
 }
 
-func (x *GenerateCollectionDescriptionResponse) GetDescription() string {
+func (x *GenerateCollectionDescriptionResponse) GetCollectionDescription() string {
 	if x != nil {
-		return x.Description
+		return x.CollectionDescription
 	}
 	return ""
 }
@@ -1790,15 +1790,22 @@ const file_xai_api_v1_collections_proto_rawDesc = "" +
 	"\vdescription\x18\x05 \x01(\tR\vdescription\"\xa5\x01\n" +
 	"\x15FieldDefinitionUpdate\x12G\n" +
 	"\x10field_definition\x18\x01 \x01(\v2\x1c.collections.FieldDefinitionR\x0ffieldDefinition\x12C\n" +
-	"\toperation\x18\x02 \x01(\x0e2%.collections.FieldDefinitionOperationR\toperation\"\xb1\x03\n" +
-	"\x17CreateCollectionRequest\x12\x17\n" +
-	"\ateam_id\x18\x01 \x01(\tR\x06teamId\x12'\n" +
-	"\x0fcollection_name\x18\x02 \x01(\tR\x0ecollectionName\x12L\n" +
-	"\x13index_configuration\x18\x03 \x01(\v2\x1b.xai_api.IndexConfigurationR\x12indexConfiguration\x12L\n" +
-	"\x13chunk_configuration\x18\x04 \x01(\v2\x1b.xai_api.ChunkConfigurationR\x12chunkConfiguration\x126\n" +
-	"\fmetric_space\x18\x05 \x01(\x0e2\x13.xai_api.HNSWMetricR\vmetricSpace\x12I\n" +
-	"\x11field_definitions\x18\x06 \x03(\v2\x1c.collections.FieldDefinitionR\x10fieldDefinitions\x125\n" +
-	"\x16collection_description\x18\a \x01(\tR\x15collectionDescription\"\x8c\x04\n" +
+	"\toperation\x18\x02 \x01(\x0e2%.collections.FieldDefinitionOperationR\toperation\"\xbe\x04\n" +
+	"\x17CreateCollectionRequest\x12\x1c\n" +
+	"\ateam_id\x18\x01 \x01(\tH\x00R\x06teamId\x88\x01\x01\x12'\n" +
+	"\x0fcollection_name\x18\x02 \x01(\tR\x0ecollectionName\x12Q\n" +
+	"\x13index_configuration\x18\x04 \x01(\v2\x1b.xai_api.IndexConfigurationH\x01R\x12indexConfiguration\x88\x01\x01\x12Q\n" +
+	"\x13chunk_configuration\x18\x05 \x01(\v2\x1b.xai_api.ChunkConfigurationH\x02R\x12chunkConfiguration\x88\x01\x01\x12;\n" +
+	"\fmetric_space\x18\a \x01(\x0e2\x13.xai_api.HNSWMetricH\x03R\vmetricSpace\x88\x01\x01\x12I\n" +
+	"\x11field_definitions\x18\t \x03(\v2\x1c.collections.FieldDefinitionR\x10fieldDefinitions\x12:\n" +
+	"\x16collection_description\x18\n" +
+	" \x01(\tH\x04R\x15collectionDescription\x88\x01\x01B\n" +
+	"\n" +
+	"\b_team_idB\x16\n" +
+	"\x14_index_configurationB\x16\n" +
+	"\x14_chunk_configurationB\x0f\n" +
+	"\r_metric_spaceB\x19\n" +
+	"\x17_collection_descriptionJ\x04\b\x03\x10\x04J\x04\b\x06\x10\a\"\xb2\x04\n" +
 	"\x12CollectionMetadata\x12#\n" +
 	"\rcollection_id\x18\x01 \x01(\tR\fcollectionId\x12'\n" +
 	"\x0fcollection_name\x18\x02 \x01(\tR\x0ecollectionName\x129\n" +
@@ -1807,9 +1814,11 @@ const file_xai_api_v1_collections_proto_rawDesc = "" +
 	"\x13index_configuration\x18\x04 \x01(\v2\x1b.xai_api.IndexConfigurationR\x12indexConfiguration\x12L\n" +
 	"\x13chunk_configuration\x18\x05 \x01(\v2\x1b.xai_api.ChunkConfigurationR\x12chunkConfiguration\x12'\n" +
 	"\x0fdocuments_count\x18\x06 \x01(\x05R\x0edocumentsCount\x12I\n" +
-	"\x11field_definitions\x18\a \x03(\v2\x1c.collections.FieldDefinitionR\x10fieldDefinitions\x125\n" +
-	"\x16collection_description\x18\b \x01(\tR\x15collectionDescription\x12&\n" +
-	"\x0ftotal_file_size\x18\t \x01(\x03R\rtotalFileSize\"\xf2\x01\n" +
+	"\x11field_definitions\x18\b \x03(\v2\x1c.collections.FieldDefinitionR\x10fieldDefinitions\x12:\n" +
+	"\x16collection_description\x18\t \x01(\tH\x00R\x15collectionDescription\x88\x01\x01\x12&\n" +
+	"\x0ftotal_file_size\x18\n" +
+	" \x01(\x03R\rtotalFileSizeB\x19\n" +
+	"\x17_collection_descriptionJ\x04\b\a\x10\b\"\xf2\x01\n" +
 	"\x16ListCollectionsRequest\x12\x17\n" +
 	"\ateam_id\x18\x01 \x01(\tR\x06teamId\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12-\n" +
@@ -1869,15 +1878,17 @@ const file_xai_api_v1_collections_proto_rawDesc = "" +
 	"\x1aGetDocumentMetadataRequest\x12\x17\n" +
 	"\afile_id\x18\x01 \x01(\tR\x06fileId\x12\x17\n" +
 	"\ateam_id\x18\x02 \x01(\tR\x06teamId\x12#\n" +
-	"\rcollection_id\x18\x03 \x01(\tR\fcollectionId\"\x83\x02\n" +
+	"\rcollection_id\x18\x03 \x01(\tR\fcollectionId\"\x9a\x02\n" +
 	"\x1eAddDocumentToCollectionRequest\x12\x17\n" +
-	"\afile_id\x18\x01 \x01(\tR\x06fileId\x12\x17\n" +
-	"\ateam_id\x18\x02 \x01(\tR\x06teamId\x12#\n" +
+	"\afile_id\x18\x01 \x01(\tR\x06fileId\x12\x1c\n" +
+	"\ateam_id\x18\x02 \x01(\tH\x00R\x06teamId\x88\x01\x01\x12#\n" +
 	"\rcollection_id\x18\x03 \x01(\tR\fcollectionId\x12O\n" +
-	"\x06fields\x18\x04 \x03(\v27.collections.AddDocumentToCollectionRequest.FieldsEntryR\x06fields\x1a9\n" +
+	"\x06fields\x18\x05 \x03(\v27.collections.AddDocumentToCollectionRequest.FieldsEntryR\x06fields\x1a9\n" +
 	"\vFieldsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"|\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\n" +
+	"\n" +
+	"\b_team_idJ\x04\b\x04\x10\x05\"|\n" +
 	"#RemoveDocumentFromCollectionRequest\x12\x17\n" +
 	"\afile_id\x18\x01 \x01(\tR\x06fileId\x12\x17\n" +
 	"\ateam_id\x18\x02 \x01(\tR\x06teamId\x12#\n" +
@@ -1911,9 +1922,9 @@ const file_xai_api_v1_collections_proto_rawDesc = "" +
 	"\x19BatchGetDocumentsResponse\x12;\n" +
 	"\tdocuments\x18\x01 \x03(\v2\x1d.collections.DocumentMetadataR\tdocuments\"K\n" +
 	"$GenerateCollectionDescriptionRequest\x12#\n" +
-	"\rcollection_id\x18\x01 \x01(\tR\fcollectionId\"I\n" +
-	"%GenerateCollectionDescriptionResponse\x12 \n" +
-	"\vdescription\x18\x01 \x01(\tR\vdescription*N\n" +
+	"\rcollection_id\x18\x01 \x01(\tR\fcollectionId\"^\n" +
+	"%GenerateCollectionDescriptionResponse\x125\n" +
+	"\x16collection_description\x18\x01 \x01(\tR\x15collectionDescription*N\n" +
 	"\x11CollectionsSortBy\x12\x1c\n" +
 	"\x18COLLECTIONS_SORT_BY_NAME\x10\x00\x12\x1b\n" +
 	"\x17COLLECTIONS_SORT_BY_AGE\x10\x01*Q\n" +
@@ -2067,6 +2078,9 @@ func file_xai_api_v1_collections_proto_init() {
 	}
 	file_xai_api_v1_types_proto_init()
 	file_xai_api_v1_shared_extra_proto_init()
+	file_xai_api_v1_collections_proto_msgTypes[2].OneofWrappers = []any{}
+	file_xai_api_v1_collections_proto_msgTypes[3].OneofWrappers = []any{}
+	file_xai_api_v1_collections_proto_msgTypes[13].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Fixed — wire alignment with the official API (breaking)
+
+Vendored protos for collections/files had drifted from the official schema (verified against the official Python SDK `proto/v6` descriptors and their git history): reserved field numbers had been compacted, so several requests were misread or dropped server-side and several responses were misread client-side. Aligned:
+
+- **CreateCollectionRequest**: `index_configuration`/`chunk_configuration`/`metric_space`/`field_definitions`/`collection_description` renumbered to the official `#4/#5/#7/#9/#10` (previously `#3–#7`; every optioned Create was scrambled on the wire). `metric_space`/`collection_description`/`team_id` are now proto3 optional.
+- **CollectionMetadata**: `field_definitions`/`collection_description`/`total_file_size` now read from official `#8/#9/#10` (previously misread `#7–#9`).
+- **AddDocumentToCollectionRequest**: `fields` moved to official `#5` (previously `#4`, silently dropped server-side).
+- **ChunkConfiguration**: chars/tokens/bytes strategies are now a proto **oneof** (`chars=#1, tokens=#2, bytes=#11`) with `strip_whitespace=#3` / `inject_name_into_chunks=#4`, matching upstream (previously `bytes=#3, strip=#4, inject=#5` — all misaligned). `ValidateChunkConfiguration` now only rejects the none-set zero value (the oneof enforces at-most-one). `GenerateCollectionDescriptionResponse.description` renamed to `collection_description` (wire-compatible).
+- **File**: gains `public_url` (#7) and `public_url_expires_at` (#8). **CreatePublicUrlResponse**: `#2` is `expires_at` (Timestamp) — the phantom `file_id` field never existed upstream. **RevokePublicUrlResponse**: gains `revoked` (#2) and `public_url` (#3).
+- New `xai/api/v1/wire_pin_test.go` pins the exact field numbers of every previously-drifted message against the official layout; `docs/PROTO.md` documents the parity baseline and the no-compaction rule for reserved numbers.
+- **collections**: new `WithChunkOverlap` (applies to the active chars/tokens/bytes strategy) and `WithTokensEncodingName` chunk options, exposing the official overlap/encoding parameters.
+
 ### Added
 
 - **chat.DeferStart / chat.DeferGet**: split deferred-completion shape (submit → request id → poll on your own schedule, resumable across processes), matching the video Start/Get pattern. `Defer`/`Defers` remain the synchronous-polling path.

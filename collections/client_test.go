@@ -54,7 +54,7 @@ func (m *mockCollCRUD) GetCollectionMetadata(ctx context.Context, req *xaiv1.Get
 
 func (m *mockCollCRUD) GenerateCollectionDescription(ctx context.Context, req *xaiv1.GenerateCollectionDescriptionRequest) (*xaiv1.GenerateCollectionDescriptionResponse, error) {
 	m.genID = req.GetCollectionId()
-	return &xaiv1.GenerateCollectionDescriptionResponse{Description: "auto-desc"}, nil
+	return &xaiv1.GenerateCollectionDescriptionResponse{CollectionDescription: "auto-desc"}, nil
 }
 
 type mockDocs struct {

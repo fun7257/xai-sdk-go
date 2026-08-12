@@ -54,6 +54,23 @@ Public xai-proto may lag the live API / Python descriptors. This repo keeps **lo
 
 When upstream publishes identical definitions, re-sync and drop residuals.
 
+## Wire-parity baseline & guard
+
+Residual synthesis once drifted from the live API (compacted `reserved` field
+numbers in collections/files — see CHANGELOG). The protos are now aligned to
+the **official Python SDK descriptors** (`xai-sdk-python` `proto/v6`, the
+freshest public artifact of the server schema; the public xai-proto repo lags
+it). Guard rails:
+
+- `xai/api/v1/wire_pin_test.go` pins the exact field numbers of every message
+  that previously drifted; a failing pin means a wire-breaking edit.
+- **Never compact or reuse `reserved` field numbers** when hand-editing
+  residuals; deleted upstream fields keep their numbers reserved forever.
+- To re-verify the whole surface, dump both sides' descriptors and diff
+  (message full-name package prefixes may differ — `rag.`/`shared.` upstream
+  vs `xai_api.` here — which is wire-irrelevant for messages; gRPC service
+  paths must match exactly).
+
 ## Generate
 
 ```bash
