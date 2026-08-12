@@ -100,7 +100,8 @@
 | `(*StreamReader).Response` / `Responses` | 结束后聚合结果 |
 | `(*Chat).Stream(ctx)` | channel 形态流式（次优选） |
 | `(*Chat).Parse(ctx, schemaJSON, dest)` | JSON Schema 结构化输出并反序列化到 `dest` |
-| `(*Chat).Defer` / `Defers` | 延迟补全；`WithDeferN` / 超时 / 轮询间隔 |
+| `(*Chat).Defer` / `Defers` | 延迟补全（内部轮询）；`WithDeferN` / 超时 / 轮询间隔 |
+| `(*Chat).DeferStart` / `DeferGet` | 拆分形态：提交拿 `request_id`，自主轮询（跨进程可续） |
 | `(*Chat).Compact` | 上下文压缩 |
 | `(*Client).GetStoredCompletion` | 取已存响应 |
 | `(*Client).DeleteStoredCompletion` | 删除已存响应 |
@@ -140,6 +141,7 @@
 | `User` / `System` / `Assistant` / `Developer` | **非法 part panic** | 字面量 path；动态用 `New*` |
 | `NewUser` / `NewSystem` / `NewAssistant` / `NewDeveloper` | 返回 `error` | 推荐生产动态内容 |
 | `ToolResult(text, callID)` | — | 工具角色消息 |
+| `Named(msg, name)` | — | 设置参与者名称（多角色对话） |
 | `Text` / `Image(url, detail)` | — | Content part；`detail`: auto/low/high |
 | `FileByID` / `FileByData` / `FileByURL` | — | 文件 part |
 | `File(...)` | `error` | 三选一：fileID / data / url |
@@ -166,6 +168,7 @@
 | `CodeExecution()` | `*Tool` | 代码执行 |
 | `Function(name, desc, params)` | `(*Tool, error)` | 客户端函数；params 为 JSON 对象/string/bytes |
 | `CollectionsSearch` / `CollectionsSearchOpts` | 工具 / error | 集合检索工具 |
+| `AttachmentSearch(limit)` | `*Tool` | 附件检索工具（配 `WithInclude("attachment_search_call_output")`） |
 | `MCP(url, opts...)` | `*Tool` | 远程 MCP |
 | `RequiredTool(name)` | `*ToolChoice` | 强制某函数 |
 | `Mode("auto\|none\|required")` | `*ToolChoice` | 工具模式 |
@@ -274,7 +277,7 @@
 | `ReindexDocument` / `WaitForIndexing` | 索引 |
 | `Search` / `SearchSimple` | 检索（Documents 走业务 API） |
 
-辅助：`FieldDefinition` / `AddFieldDefinition` / `DeleteFieldDefinition` / `ValidateChunkConfiguration`。  
+辅助：`FieldDefinition` / `AddFieldDefinition` / `DeleteFieldDefinition` / `ValidateChunkConfiguration`；分块构造器 `ChunkByChars` / `ChunkByTokens` / `ChunkByBytes`（+ `WithStripWhitespace` / `WithInjectNameIntoChunks`）。  
 Create 选项：`WithDescription` / `WithIndexModel` / `WithChunkConfiguration` / `WithMetric` / `WithFieldDefinitions`。  
 Upload 选项：`WithDocumentFields` / `WithWaitForIndexing` / `WithUploadOptions` / `WithDeleteOnAddFailure`。  
 Documents 列表选项：`WithDocumentsFilter` / `WithDocumentsName` / `WithDocumentsLimit` / `WithDocumentsPaginationToken`。  
