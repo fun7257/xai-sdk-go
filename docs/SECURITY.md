@@ -18,7 +18,18 @@ This library is **v0**; breaking changes may occur before `v1.0.0`. Stability de
 
 Include: module version or commit SHA · impact · minimal repro **without** real API keys · whether already public.
 
-Acknowledgement and disclosure timelines are case-by-case for a v0 project.
+## Response expectations
+
+Best-effort for a single-maintainer v0 project:
+
+| Stage | Target |
+|-------|--------|
+| Acknowledgement | Within **7 days** of a private report |
+| Triage / severity assessment | Within **14 days** |
+| Fix or mitigation for confirmed issues | Next release; critical issues prioritized |
+| Coordinated disclosure | Agreed with the reporter case-by-case; default after a fix ships |
+
+No bug bounty is offered.
 
 ## Notes for consumers
 

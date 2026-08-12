@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### Fixed (low-severity audit batch)
+
+- **chat.Parse**: session `ResponseFormat` restore now uses `defer`, so a panicking Sample cannot leave the session mutated; **chat.Compact** surfaces `Append` errors instead of discarding them.
+- **chat.ProcessChunk**: response-level fields (id, model, usage, system_fingerprint, service_tier) are only overwritten by chunks that carry them — a trailing empty chunk no longer erases accumulated values.
+- **files.Content**: returns no partial data alongside an error.
+- **image.Response**: negative index degrades gracefully instead of panicking.
+- **collections.Update**: no longer mutates the caller's request (collection id set on an internal clone).
+- **telemetry**: `SetTracer` now toggles `Enabled()` in line with its docs; truthy env parsing accepts `True`; package docs cover `XAI_SDK_INCLUDE_SENSITIVE_TELEMETRY_ATTRIBUTES`; `SetupConsoleRecipeDoc` godoc fixed.
+- **conn / xai.WithMetadata**: an odd number of metadata elements now fails `NewClient` fast instead of silently dropping the orphan key; the single-value-per-key limitation is documented.
+- **tools**: `Function` validates pre-encoded (string/[]byte/RawMessage) parameters as JSON; `WithMCPHeaders` copies the map; `CollectionsSearch` never returns nil and copies the limit value.
+- **search.Parameters.Proto**: copies the Sources slice and MaxSearchResults value so later caller mutations cannot leak into built requests.
+
+### Docs (low-severity audit batch)
+
+- Install pins bumped to `v0.1.2` (README, README.zh-CN, API reference).
+- `docs/SECURITY.md`: best-effort response expectations table (acknowledgement ≤7d, triage ≤14d).
+- `examples/video` and `examples/deferred` bound their polling with context timeouts.
+- `files.StorageOptions.Proto` documents that a non-nil zero value still requests storage with server defaults.
+
 ### Fixed
 
 - **files.Upload**: a server-side stream abort (quota/size rejection) now surfaces the real gRPC status instead of a bare `EOF` (`Send` == `io.EOF` → status via `CloseAndRecv`).
