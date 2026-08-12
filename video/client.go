@@ -222,7 +222,24 @@ func (c *Client) buildGenerate(prompt, model string, cfg *genCfg) (*xaiv1.Genera
 	return req, nil
 }
 
+// buildExtend rejects options the ExtendVideoRequest proto has no fields for
+// (previously they were silently ignored): aspect ratio, resolution,
+// first-frame image, and reference images. The source video comes from the
+// explicit arguments, so the Generate-only WithVideoURL/WithVideoFileID
+// options are rejected too.
 func (c *Client) buildExtend(prompt, model, videoURL, videoFileID string, cfg *genCfg) (*xaiv1.ExtendVideoRequest, error) {
+	switch {
+	case cfg.aspectSet:
+		return nil, fmt.Errorf("video extension does not support WithAspectRatio")
+	case cfg.resSet:
+		return nil, fmt.Errorf("video extension does not support WithResolution")
+	case cfg.imageURL != "" || cfg.imageFileID != "":
+		return nil, fmt.Errorf("video extension does not support a first-frame image (WithImageURL/WithImageFileID)")
+	case len(cfg.refs) > 0 || len(cfg.refFileIDs) > 0:
+		return nil, fmt.Errorf("video extension does not support reference images")
+	case cfg.videoURL != "" || cfg.videoFileID != "":
+		return nil, fmt.Errorf("pass the source video as the videoURL/videoFileID argument, not WithVideoURL/WithVideoFileID")
+	}
 	if videoURL != "" && videoFileID != "" {
 		return nil, fmt.Errorf("only one of video_url or video_file_id can be set for a request")
 	}

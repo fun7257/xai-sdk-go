@@ -904,6 +904,38 @@ func (ch *Chat) Defers(ctx context.Context, opts ...DeferOption) ([]*Response, e
 	return wrapMultiResponses(final, n), nil
 }
 
+// DeferStart submits a deferred completion without polling and returns the
+// request id. Pair with DeferGet to poll on your own schedule (or from a
+// different process). Pass WithN(k) for multi-completion requests.
+// Prefer Defer/Defers when synchronous polling is acceptable.
+func (ch *Chat) DeferStart(ctx context.Context, opts ...CallOpt) (string, error) {
+	cfg := applyCallOpts(opts)
+	req, err := ch.makeRequest(cfg.n)
+	if err != nil {
+		return "", err
+	}
+	start, err := ch.stub.StartDeferredCompletion(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	return start.RequestId, nil
+}
+
+// DeferGet polls a deferred completion once by request id.
+// When the status is DONE, one Response per completion index is returned;
+// for PENDING/EXPIRED/FAILED the responses slice is nil and the caller
+// decides whether to keep polling (PENDING) or give up.
+func (ch *Chat) DeferGet(ctx context.Context, requestID string) (xaiv1.DeferredStatus, []*Response, error) {
+	r, err := ch.stub.GetDeferredCompletion(ctx, &xaiv1.GetDeferredRequest{RequestId: requestID})
+	if err != nil {
+		return xaiv1.DeferredStatus_INVALID_DEFERRED_STATUS, nil, err
+	}
+	if r.Status == xaiv1.DeferredStatus_DONE {
+		return r.Status, wrapMultiResponses(r.GetResponse(), 1), nil
+	}
+	return r.Status, nil, nil
+}
+
 // Compact compacts the current conversation history.
 func (ch *Chat) Compact(ctx context.Context) (*CompactContextResponse, error) {
 	pb, err := ch.stub.CompactContext(ctx, &xaiv1.CompactContextRequest{

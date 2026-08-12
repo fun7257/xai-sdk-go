@@ -4,7 +4,15 @@
 
 ### Added
 
+- **chat.DeferStart / chat.DeferGet**: split deferred-completion shape (submit → request id → poll on your own schedule, resumable across processes), matching the video Start/Get pattern. `Defer`/`Defers` remain the synchronous-polling path.
+- **tools.AttachmentSearch**: constructor for the attachment search server-side tool (the last `Tool` oneof branch without one); pairs with `chat.WithInclude("attachment_search_call_output")`.
+- **chat.Named**: sets the participant name on a message (`Message.name` was previously unreachable via builders).
+- **collections chunk constructors**: `ChunkByChars` / `ChunkByTokens` / `ChunkByBytes` with `WithStripWhitespace` / `WithInjectNameIntoChunks`; results always pass `ValidateChunkConfiguration`.
 - **release workflow** (`.github/workflows/release.yml`): pushing a `v*` tag now publishes a GitHub Release whose notes are the matching `CHANGELOG.md` section (auto-generated notes as fallback); manual dispatch backfills or refreshes notes for existing tags.
+
+### Changed
+
+- **video.Extend / PrepareExtension**: options without `ExtendVideoRequest` fields (`WithAspectRatio`, `WithResolution`, first-frame image, reference images, Generate-only video-source options) now return an error instead of being silently ignored.
 
 ## [0.2.0] — 2026-08-12
 

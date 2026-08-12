@@ -311,6 +311,19 @@ func CollectionsSearchOpts(collectionIDs []string, opts ...CollectionsSearchOpti
 	return &xaiv1.Tool{Tool: &xaiv1.Tool_CollectionsSearch{CollectionsSearch: cs}}, nil
 }
 
+// AttachmentSearch creates a server-side attachment search tool, which lets
+// the model search files attached to the conversation. limit optionally caps
+// the number of returned chunks (the value is copied). Pair with
+// chat.WithInclude("attachment_search_call_output") to receive its output.
+func AttachmentSearch(limit *int32) *xaiv1.Tool {
+	as := &xaiv1.AttachmentSearch{}
+	if limit != nil {
+		l := *limit
+		as.Limit = &l
+	}
+	return &xaiv1.Tool{Tool: &xaiv1.Tool_AttachmentSearch{AttachmentSearch: as}}
+}
+
 // MCPOption configures MCP.
 type MCPOption func(*mcpCfg)
 type mcpCfg struct {

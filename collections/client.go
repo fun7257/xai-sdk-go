@@ -132,6 +132,55 @@ func WithFieldDefinitions(fs ...*xaiv1.FieldDefinition) CreateOption {
 	return func(c *createCfg) { c.fields = fs }
 }
 
+// ChunkOption configures the shared flags of a chunk configuration.
+type ChunkOption func(*xaiv1.ChunkConfiguration)
+
+// WithStripWhitespace strips whitespace from chunks during indexing.
+func WithStripWhitespace(v bool) ChunkOption {
+	return func(c *xaiv1.ChunkConfiguration) { c.StripWhitespace = v }
+}
+
+// WithInjectNameIntoChunks injects the document name into each chunk.
+func WithInjectNameIntoChunks(v bool) ChunkOption {
+	return func(c *xaiv1.ChunkConfiguration) { c.InjectNameIntoChunks = v }
+}
+
+// ChunkByChars builds a character-based chunk configuration.
+// The result always passes ValidateChunkConfiguration.
+func ChunkByChars(maxChunkSizeChars int32, opts ...ChunkOption) *xaiv1.ChunkConfiguration {
+	c := &xaiv1.ChunkConfiguration{
+		CharsConfiguration: &xaiv1.CharsConfiguration{MaxChunkSizeChars: maxChunkSizeChars},
+	}
+	for _, o := range opts {
+		o(c)
+	}
+	return c
+}
+
+// ChunkByTokens builds a token-based chunk configuration.
+// The result always passes ValidateChunkConfiguration.
+func ChunkByTokens(maxChunkSizeTokens int32, opts ...ChunkOption) *xaiv1.ChunkConfiguration {
+	c := &xaiv1.ChunkConfiguration{
+		TokensConfiguration: &xaiv1.TokensConfiguration{MaxChunkSizeTokens: maxChunkSizeTokens},
+	}
+	for _, o := range opts {
+		o(c)
+	}
+	return c
+}
+
+// ChunkByBytes builds a byte-based chunk configuration.
+// The result always passes ValidateChunkConfiguration.
+func ChunkByBytes(maxChunkSizeBytes int32, opts ...ChunkOption) *xaiv1.ChunkConfiguration {
+	c := &xaiv1.ChunkConfiguration{
+		BytesConfiguration: &xaiv1.BytesConfiguration{MaxChunkSizeBytes: maxChunkSizeBytes},
+	}
+	for _, o := range opts {
+		o(c)
+	}
+	return c
+}
+
 // ValidateChunkConfiguration requires exactly one of chars/tokens/bytes when cfg is non-nil.
 // When cfg is nil, returns nil.
 func ValidateChunkConfiguration(cfg *xaiv1.ChunkConfiguration) error {
