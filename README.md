@@ -32,7 +32,7 @@ dev tip  go get …@dev             # latest green main (overwritten)
 ## Install
 
 ```bash
-go get github.com/fun7257/xai-sdk-go@v0.1.2
+go get github.com/fun7257/xai-sdk-go@v0.2.0
 ```
 
 <details>

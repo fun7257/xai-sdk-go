@@ -2,49 +2,45 @@
 
 ## Unreleased
 
-### Added (API completeness batch)
+## [0.2.0] — 2026-08-12
+
+Audit-driven release: high/medium findings fixed (#9), low-severity follow-ups (#10), API completeness (#11), plus test-coverage and CI improvements.
+
+### Breaking
+
+- **search.XSource** now validates included/excluded handle mutual exclusion and returns `(*xaiv1.Source, error)`, matching `WebSource`/`NewsSource`; use `UncheckedXSource` for the previous no-error shape. Added `ValidateXHandles`.
+- **Strict enum inputs**: `image.WithResolution`, `video.WithResolution`, and `collections.WithMetric` cause the call to return an error for unknown values (previously silent fallback), matching aspect-ratio handling. `tools.Mode` / `files.WithListSortBy` document their fallback.
+- **files upload validation**: `Upload` rejects `WithExpiresAfter` values outside `[1h, 30d]` (`MinExpiresAfter` / `MaxExpiresAfter`) and filenames violating the API contract (≤ `MaxFilenameChars` (255) Unicode chars; no control characters, line terminators, `"`, `;`, `\`) before streaming; `CreatePublicURL` rejects sub-second TTLs. `xai.NewClient` fails fast on an odd number of `WithMetadata` elements.
+
+### Added
 
 - **Auto-pagination helpers**: `files.ListAll`, `collections.ListAll`, `collections.ListAllDocuments`, and `batch.ListAll` follow pagination tokens until the final page (with a defensive stop on non-advancing tokens).
 - **collections.WithDocumentsPaginationToken**: resume `ListDocuments` from a prior page token (the proto field was previously unreachable via options).
 - **files.WithContentFormat**: request `original` (raw bytes, default) or `text` (server-extracted text) on `Content` / `ContentWriter`; unknown values error. Both methods now accept variadic `ContentOption`s (source-compatible).
-- **files filename validation**: `Upload` locally enforces the API filename contract (≤ `MaxFilenameChars` (255) Unicode chars; no control characters, line terminators, `"`, `;`, `\`) before streaming any data.
 - **types**: completed aspect-ratio constants (`Aspect2_3`, `Aspect3_2`, video `1:1`/`4:3`/`3:4`/`3:2`/`2:3`), image resolutions (`ImageRes1K`/`ImageRes2K`), and content formats (`ContentFormatOriginal`/`ContentFormatText`); a test locks constants to their validators.
-
-### Fixed (low-severity audit batch)
-
-- **chat.Parse**: session `ResponseFormat` restore now uses `defer`, so a panicking Sample cannot leave the session mutated; **chat.Compact** surfaces `Append` errors instead of discarding them.
-- **chat.ProcessChunk**: response-level fields (id, model, usage, system_fingerprint, service_tier) are only overwritten by chunks that carry them — a trailing empty chunk no longer erases accumulated values.
-- **files.Content**: returns no partial data alongside an error.
-- **image.Response**: negative index degrades gracefully instead of panicking.
-- **collections.Update**: no longer mutates the caller's request (collection id set on an internal clone).
-- **telemetry**: `SetTracer` now toggles `Enabled()` in line with its docs; truthy env parsing accepts `True`; package docs cover `XAI_SDK_INCLUDE_SENSITIVE_TELEMETRY_ATTRIBUTES`; `SetupConsoleRecipeDoc` godoc fixed.
-- **conn / xai.WithMetadata**: an odd number of metadata elements now fails `NewClient` fast instead of silently dropping the orphan key; the single-value-per-key limitation is documented.
-- **tools**: `Function` validates pre-encoded (string/[]byte/RawMessage) parameters as JSON; `WithMCPHeaders` copies the map; `CollectionsSearch` never returns nil and copies the limit value.
-- **search.Parameters.Proto**: copies the Sources slice and MaxSearchResults value so later caller mutations cannot leak into built requests.
-
-### Docs (low-severity audit batch)
-
-- Install pins bumped to `v0.1.2` (README, README.zh-CN, API reference).
-- `docs/SECURITY.md`: best-effort response expectations table (acknowledgement ≤7d, triage ≤14d).
-- `examples/video` and `examples/deferred` bound their polling with context timeouts.
-- `files.StorageOptions.Proto` documents that a non-nil zero value still requests storage with server defaults.
 
 ### Fixed
 
 - **files.Upload**: a server-side stream abort (quota/size rejection) now surfaces the real gRPC status instead of a bare `EOF` (`Send` == `io.EOF` → status via `CloseAndRecv`).
-- **chat streaming hardening**: `Response.ProcessChunk` and multi-response wrapping drop outputs with negative or absurdly large indexes instead of panicking / allocating unbounded memory on malformed stream data.
-- **files.ContentWriter**: cancels the server stream promptly on early returns (e.g. writer errors) instead of holding it until the caller's context ends.
-- **files.BatchUploadItems**: bounded worker pool (no longer one goroutine per item); `Path`+`Reader` both set is now an error for that item; panics from an item upload or the `onComplete` callback are recovered into that item's error instead of crashing the process.
-- **collections.UploadDocument**: `WithDeleteOnAddFailure` cleanup now runs on a context detached from the caller's (30s bound), so orphan files are still deleted when the add failed due to cancellation/deadline.
-- **batch.Result.Error**: preserves structured status details (`status.FromProto`) instead of rebuilding from code+message only.
+- **chat streaming hardening**: `Response.ProcessChunk` and multi-response wrapping drop outputs with negative or absurdly large indexes instead of panicking / allocating unbounded memory on malformed stream data; response-level fields (id, model, usage, system_fingerprint, service_tier) are only overwritten by chunks that carry them.
+- **chat.Parse**: session `ResponseFormat` restore now uses `defer`, so a panicking Sample cannot leave the session mutated; **chat.Compact** surfaces `Append` errors.
+- **files.ContentWriter**: cancels the server stream promptly on early returns; **files.Content** returns no partial data alongside an error.
+- **files.BatchUploadItems**: bounded worker pool (no longer one goroutine per item); `Path`+`Reader` both set is an error for that item; panics from an item upload or the `onComplete` callback are recovered into that item's error instead of crashing the process.
+- **collections.UploadDocument**: `WithDeleteOnAddFailure` cleanup runs on a context detached from the caller's (30s bound), so orphan files are deleted even when the add failed due to cancellation/deadline; **collections.Update** no longer mutates the caller's request.
+- **batch.Result.Error**: preserves structured status details (`status.FromProto`).
+- **image.Response**: negative index degrades gracefully instead of panicking.
+- **telemetry**: `SetTracer` toggles `Enabled()` in line with its docs; truthy env parsing accepts any casing of `true`; package docs cover `XAI_SDK_INCLUDE_SENSITIVE_TELEMETRY_ATTRIBUTES`.
+- **tools**: `Function` validates pre-encoded parameters as JSON; `WithMCPHeaders` copies the map; `CollectionsSearch` never returns nil and copies the limit value; **search.Parameters.Proto** copies the Sources slice and MaxSearchResults value.
 
 ### Changed
 
-- **Strict enum inputs**: `image.WithResolution`, `video.WithResolution`, and `collections.WithMetric` now cause the call to return an error for unknown values (previously silent fallback), matching aspect-ratio handling. `tools.Mode` / `files.WithListSortBy` document their fallback.
-- **search.XSource** now validates included/excluded handle mutual exclusion and returns `(*xaiv1.Source, error)`, matching `WebSource`/`NewsSource`; use `UncheckedXSource` for the previous no-error shape. Added `ValidateXHandles`.
-- **tools bool options**: `WithImageUnderstanding(false)` / `WithImageSearch(false)` / `WithXMediaUnderstanding(false, false)` now send an explicit `false` on the wire (previously a no-op); unset options remain absent.
-- **files TTL validation**: `Upload` rejects `WithExpiresAfter` values outside `[1h, 30d]` (`MinExpiresAfter` / `MaxExpiresAfter`) before streaming; `CreatePublicURL` rejects sub-second TTLs.
-- Docs: cleartext warnings on `xai.WithInsecure` and `tools.WithMCPAuth` / `tools.MCP`.
+- **tools bool options**: `WithImageUnderstanding(false)` / `WithImageSearch(false)` / `WithXMediaUnderstanding(false, false)` send an explicit `false` on the wire (previously a no-op); unset options remain absent.
+- Docs: cleartext warnings on `xai.WithInsecure` and `tools.WithMCPAuth` / `tools.MCP`; `docs/SECURITY.md` response-expectations table; `examples/video` / `examples/deferred` bound polling with context timeouts; install pins updated.
+
+### Tests / CI
+
+- New coverage for previously untested surfaces: `image.Download` trust boundary (scheme allowlist, redirects, 100 MiB cap), collections management lifecycle + `ErrNoManagementKey` paths, `internal/conn` dial interceptor and metadata wiring. Package coverage: collections 57→84%, image 53→73%, conn 54→96%.
+- CI collects a coverage profile (generated `xai/api/v1` excluded from the total) and uploads it as an artifact; `make cover` mirrors it locally.
 
 ### Dependencies
 
