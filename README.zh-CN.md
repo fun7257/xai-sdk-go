@@ -51,6 +51,10 @@ go get github.com/fun7257/xai-sdk-go@v0.3.0
 
 </details>
 
+### 本 SDK 与 OpenAI 兼容 REST API 的选择
+
+xAI 的 REST API 本身兼容 OpenAI:想要熟悉的 OpenAI 形态,把任意 OpenAI 客户端(如官方 OpenAI Go SDK)的 `base_url` 指向 `https://api.x.ai/v1` 即可,无需额外类库。需要 gRPC 通道与完整功能面(Collections 管理、延迟补全、服务端工具、存储选项、类型化批处理结果)时,选择**本 SDK**。两者在同一代码库中混用没有问题。
+
 ---
 
 ## 快速开始
