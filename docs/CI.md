@@ -8,6 +8,7 @@ How GitHub Actions run for this **library module** (no binary release artifacts)
 |----------|------|---------|
 | **ci** | [`.github/workflows/ci.yaml`](../.github/workflows/ci.yaml) | Offline gates: vet, test + coverage profile (uploaded artifact), race (scoped), examples, lint, govulncheck |
 | **integration** | [`.github/workflows/integration.yml`](../.github/workflows/integration.yml) | Optional live API smoke (`//go:build integration`) |
+| **release** | [`.github/workflows/release.yml`](../.github/workflows/release.yml) | On `v*` tags: publish GitHub Release notes from the matching `CHANGELOG.md` section; manual dispatch backfills existing tags |
 
 Local equivalents: [`CONTRIBUTING.md`](../CONTRIBUTING.md) (`make check`, `race`, `lint`, `vuln`, `integration`).
 
