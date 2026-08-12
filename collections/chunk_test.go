@@ -15,17 +15,15 @@ func TestValidateChunkConfiguration(t *testing.T) {
 	if err := collections.ValidateChunkConfiguration(nil); err != nil {
 		t.Fatal(err)
 	}
+	// The strategies are a proto oneof (at most one set); the zero value has
+	// none and must be rejected.
 	if err := collections.ValidateChunkConfiguration(&xaiv1.ChunkConfiguration{}); err == nil {
 		t.Fatal("empty should error")
 	}
 	if err := collections.ValidateChunkConfiguration(&xaiv1.ChunkConfiguration{
-		CharsConfiguration:  &xaiv1.CharsConfiguration{MaxChunkSizeChars: 100},
-		TokensConfiguration: &xaiv1.TokensConfiguration{MaxChunkSizeTokens: 50},
-	}); err == nil {
-		t.Fatal("two modes should error")
-	}
-	if err := collections.ValidateChunkConfiguration(&xaiv1.ChunkConfiguration{
-		CharsConfiguration: &xaiv1.CharsConfiguration{MaxChunkSizeChars: 100},
+		Config: &xaiv1.ChunkConfiguration_CharsConfiguration{
+			CharsConfiguration: &xaiv1.CharsConfiguration{MaxChunkSizeChars: 100},
+		},
 	}); err != nil {
 		t.Fatal(err)
 	}

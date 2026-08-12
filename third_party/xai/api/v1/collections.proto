@@ -48,13 +48,14 @@ message FieldDefinitionUpdate {
   FieldDefinitionOperation operation = 2;
 }
 message CreateCollectionRequest {
-  string team_id = 1;
+  optional string team_id = 1;
   string collection_name = 2;
-  xai_api.IndexConfiguration index_configuration = 3;
-  xai_api.ChunkConfiguration chunk_configuration = 4;
-  xai_api.HNSWMetric metric_space = 5;
-  repeated FieldDefinition field_definitions = 6;
-  string collection_description = 7;
+  reserved 3, 6;
+  optional xai_api.IndexConfiguration index_configuration = 4;
+  optional xai_api.ChunkConfiguration chunk_configuration = 5;
+  optional xai_api.HNSWMetric metric_space = 7;
+  repeated FieldDefinition field_definitions = 9;
+  optional string collection_description = 10;
 }
 message CollectionMetadata {
   string collection_id = 1;
@@ -63,9 +64,10 @@ message CollectionMetadata {
   xai_api.IndexConfiguration index_configuration = 4;
   xai_api.ChunkConfiguration chunk_configuration = 5;
   int32 documents_count = 6;
-  repeated FieldDefinition field_definitions = 7;
-  string collection_description = 8;
-  int64 total_file_size = 9;
+  reserved 7;
+  repeated FieldDefinition field_definitions = 8;
+  optional string collection_description = 9;
+  int64 total_file_size = 10;
 }
 message ListCollectionsRequest {
   string team_id = 1;
@@ -119,8 +121,11 @@ message ListDocumentsResponse {
 }
 message GetDocumentMetadataRequest { string file_id = 1; string team_id = 2; string collection_id = 3; }
 message AddDocumentToCollectionRequest {
-  string file_id = 1; string team_id = 2; string collection_id = 3;
-  map<string, string> fields = 4;
+  string file_id = 1;
+  optional string team_id = 2;
+  string collection_id = 3;
+  reserved 4;
+  map<string, string> fields = 5;
 }
 message RemoveDocumentFromCollectionRequest { string file_id = 1; string team_id = 2; string collection_id = 3; }
 message UpdateDocumentRequest {
@@ -140,4 +145,4 @@ message BatchGetDocumentsRequest {
 }
 message BatchGetDocumentsResponse { repeated DocumentMetadata documents = 1; }
 message GenerateCollectionDescriptionRequest { string collection_id = 1; }
-message GenerateCollectionDescriptionResponse { string description = 1; }
+message GenerateCollectionDescriptionResponse { string collection_description = 1; }

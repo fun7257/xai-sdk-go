@@ -90,6 +90,13 @@ message File {
   string id = 5;
 
   reserved 6;
+
+  // Public URL for the file, present while one is active
+  // (see `CreatePublicUrl` / `RevokePublicUrl`).
+  optional string public_url = 7;
+
+  // UTC timestamp the public URL expires at, when a TTL was set.
+  optional google.protobuf.Timestamp public_url_expires_at = 8;
 }
 
 // Sort direction for list-style RPCs.
@@ -199,11 +206,15 @@ message CreatePublicUrlRequest {
 }
 message CreatePublicUrlResponse {
   string public_url = 1;
-  string file_id = 2;
+  // UTC timestamp the public URL expires at, when a TTL was set.
+  optional google.protobuf.Timestamp expires_at = 2;
 }
 message RevokePublicUrlRequest {
   string file_id = 1;
 }
 message RevokePublicUrlResponse {
   string file_id = 1;
+  bool revoked = 2;
+  // The public URL that was revoked.
+  optional string public_url = 3;
 }
