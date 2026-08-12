@@ -51,7 +51,8 @@ func WithManagementAPIHost(host string) Option {
 	return func(c *clientConfig) { c.managementAPIHost = host }
 }
 
-// WithInsecure dials without TLS; Bearer auth is still attached.
+// WithInsecure dials without TLS; Bearer auth is still attached, so the API
+// key travels in cleartext. Only use against local/test endpoints you control.
 func WithInsecure() Option {
 	return func(c *clientConfig) { c.insecure = true }
 }
