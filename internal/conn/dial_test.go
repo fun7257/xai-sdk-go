@@ -3,6 +3,7 @@ package conn_test
 import (
 	"context"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,6 +14,15 @@ import (
 	"github.com/fun7257/xai-sdk-go/internal/conn"
 	xaiv1 "github.com/fun7257/xai-sdk-go/xai/api/v1"
 )
+
+// Odd metadata element counts are a caller bug; Dial must fail fast instead
+// of silently dropping the orphan key.
+func TestDialRejectsOddMetadata(t *testing.T) {
+	_, err := conn.Dial(context.Background(), "127.0.0.1:9", "k", true, 0, []string{"k1", "v1", "orphan"}, nil)
+	if err == nil || !strings.Contains(err.Error(), "even number") {
+		t.Fatalf("expected odd metadata rejection, got: %v", err)
+	}
+}
 
 func TestResolveManagementKey(t *testing.T) {
 	if got := conn.ResolveManagementKey("explicit", false); got != "explicit" {

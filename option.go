@@ -62,7 +62,11 @@ func WithTimeout(d time.Duration) Option {
 	return func(c *clientConfig) { c.timeout = d }
 }
 
-// WithMetadata appends custom gRPC metadata key/value pairs (flattened: k1,v1,k2,v2,...).
+// WithMetadata appends custom gRPC metadata key/value pairs (flattened:
+// k1,v1,k2,v2,...). NewClient returns an error when the total element count is
+// odd. Only the first value of a repeated key is sent (PerRPCCredentials carry
+// a flat map); avoid the reserved keys authorization, xai-sdk-version, and
+// xai-sdk-language.
 func WithMetadata(kv ...string) Option {
 	return func(c *clientConfig) { c.metadata = append(c.metadata, kv...) }
 }
