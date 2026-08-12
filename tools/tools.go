@@ -51,6 +51,8 @@ func RequiredTool(name string) *xaiv1.ToolChoice {
 }
 
 // Mode returns a tool choice mode string (auto/none/required).
+// Unknown values fall back to auto; use the types.ToolMode* constants to
+// avoid typos.
 func Mode(mode string) *xaiv1.ToolChoice {
 	var m xaiv1.ToolMode
 	switch mode {
@@ -68,7 +70,7 @@ func Mode(mode string) *xaiv1.ToolChoice {
 type WebSearchOption func(*webSearchCfg)
 type webSearchCfg struct {
 	excluded, allowed               []string
-	imageUnderstanding, imageSearch bool
+	imageUnderstanding, imageSearch *bool
 	country, city, region, tz       string
 }
 
@@ -109,11 +111,11 @@ func ValidateWebSearchDomains(allowed, excluded []string) error {
 
 func buildWebSearch(cfg *webSearchCfg) *xaiv1.Tool {
 	ws := &xaiv1.WebSearch{ExcludedDomains: cfg.excluded, AllowedDomains: cfg.allowed}
-	if cfg.imageUnderstanding {
-		ws.EnableImageUnderstanding = bp(true)
+	if cfg.imageUnderstanding != nil {
+		ws.EnableImageUnderstanding = bp(*cfg.imageUnderstanding)
 	}
-	if cfg.imageSearch {
-		ws.EnableImageSearch = bp(true)
+	if cfg.imageSearch != nil {
+		ws.EnableImageSearch = bp(*cfg.imageSearch)
 	}
 	if cfg.country != "" || cfg.city != "" || cfg.region != "" || cfg.tz != "" {
 		ws.UserLocation = &xaiv1.WebSearchUserLocation{
@@ -133,14 +135,16 @@ func WithAllowedDomains(d ...string) WebSearchOption {
 	return func(c *webSearchCfg) { c.allowed = d }
 }
 
-// WithImageUnderstanding enables image understanding.
+// WithImageUnderstanding sets image understanding explicitly on the wire;
+// false disables it even when the server default is on.
 func WithImageUnderstanding(v bool) WebSearchOption {
-	return func(c *webSearchCfg) { c.imageUnderstanding = v }
+	return func(c *webSearchCfg) { c.imageUnderstanding = &v }
 }
 
-// WithImageSearch enables image search results.
+// WithImageSearch sets image search results explicitly on the wire;
+// false disables them even when the server default is on.
 func WithImageSearch(v bool) WebSearchOption {
-	return func(c *webSearchCfg) { c.imageSearch = v }
+	return func(c *webSearchCfg) { c.imageSearch = &v }
 }
 
 // WithUserLocation sets geolocation preference.
@@ -153,7 +157,7 @@ type XSearchOption func(*xSearchCfg)
 type xSearchCfg struct {
 	from, to          *time.Time
 	allowed, excluded []string
-	img, vid          bool
+	img, vid          *bool
 }
 
 // XSearch creates a server-side X search tool (primary path).
@@ -193,11 +197,11 @@ func ValidateXSearchHandles(allowed, excluded []string) error {
 
 func buildXSearch(cfg *xSearchCfg) *xaiv1.Tool {
 	xs := &xaiv1.XSearch{AllowedXHandles: cfg.allowed, ExcludedXHandles: cfg.excluded}
-	if cfg.img {
-		xs.EnableImageUnderstanding = bp(true)
+	if cfg.img != nil {
+		xs.EnableImageUnderstanding = bp(*cfg.img)
 	}
-	if cfg.vid {
-		xs.EnableVideoUnderstanding = bp(true)
+	if cfg.vid != nil {
+		xs.EnableVideoUnderstanding = bp(*cfg.vid)
 	}
 	if cfg.from != nil {
 		xs.FromDate = timestamppb.New(*cfg.from)
@@ -223,9 +227,11 @@ func WithExcludedXHandles(h ...string) XSearchOption {
 	return func(c *xSearchCfg) { c.excluded = h }
 }
 
-// WithXMediaUnderstanding enables image/video understanding for X posts.
+// WithXMediaUnderstanding sets image/video understanding for X posts
+// explicitly on the wire; false disables the capability even when the server
+// default is on.
 func WithXMediaUnderstanding(image, video bool) XSearchOption {
-	return func(c *xSearchCfg) { c.img, c.vid = image, video }
+	return func(c *xSearchCfg) { c.img, c.vid = &image, &video }
 }
 
 // CodeExecution creates a server-side code execution tool.
@@ -315,6 +321,10 @@ type mcpCfg struct {
 }
 
 // MCP creates a remote MCP tool.
+//
+// Security: values set via WithMCPAuth and WithMCPHeaders are carried in the
+// request proto in cleartext. Avoid logging or dumping chat requests / tool
+// protos that contain MCP credentials.
 func MCP(serverURL string, opts ...MCPOption) *xaiv1.Tool {
 	cfg := &mcpCfg{url: serverURL}
 	for _, o := range opts {
@@ -337,6 +347,8 @@ func WithMCPLabel(s string) MCPOption { return func(c *mcpCfg) { c.label = s } }
 func WithMCPDescription(s string) MCPOption { return func(c *mcpCfg) { c.desc = s } }
 
 // WithMCPAuth sets MCP authorization header value.
+// The value travels in the request proto in cleartext; do not log requests
+// that carry it (see MCP).
 func WithMCPAuth(s string) MCPOption { return func(c *mcpCfg) { c.auth = s } }
 
 // WithMCPAllowedTools limits MCP tool names.

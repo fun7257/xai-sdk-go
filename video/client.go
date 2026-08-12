@@ -51,7 +51,8 @@ type genCfg struct {
 	refFileIDs   []string
 	aspectStr    string
 	aspectSet    bool
-	resolution   *xaiv1.VideoResolution
+	resStr       string
+	resSet       bool
 	storage      *files.StorageOptions
 	pollTimeout  time.Duration
 	pollInterval time.Duration
@@ -95,11 +96,12 @@ func WithAspectRatio(s string) GenerateOption {
 	}
 }
 
-// WithResolution sets resolution ("480p" or "720p"). Unknown values default to 480p.
+// WithResolution sets resolution ("480p" or "720p").
+// Unknown values cause Generate/Prepare to return an error (no silent fallback).
 func WithResolution(s string) GenerateOption {
 	return func(c *genCfg) {
-		v := videoRes(s)
-		c.resolution = &v
+		c.resStr = s
+		c.resSet = true
 	}
 }
 
@@ -134,12 +136,14 @@ func videoAspect(s string) (xaiv1.VideoAspectRatio, error) {
 	return 0, fmt.Errorf("unknown video aspect ratio %q", s)
 }
 
-func videoRes(s string) xaiv1.VideoResolution {
+func videoRes(s string) (xaiv1.VideoResolution, error) {
 	switch s {
+	case "480p":
+		return xaiv1.VideoResolution_VIDEO_RESOLUTION_480P, nil
 	case "720p":
-		return xaiv1.VideoResolution_VIDEO_RESOLUTION_720P
+		return xaiv1.VideoResolution_VIDEO_RESOLUTION_720P, nil
 	default:
-		return xaiv1.VideoResolution_VIDEO_RESOLUTION_480P
+		return 0, fmt.Errorf("unknown video resolution %q (want 480p or 720p)", s)
 	}
 }
 
@@ -183,10 +187,18 @@ func (c *Client) buildGenerate(prompt, model string, cfg *genCfg) (*xaiv1.Genera
 		}
 		aspect = &v
 	}
+	var res *xaiv1.VideoResolution
+	if cfg.resSet {
+		v, err := videoRes(cfg.resStr)
+		if err != nil {
+			return nil, err
+		}
+		res = &v
+	}
 
 	req := &xaiv1.GenerateVideoRequest{
 		Prompt: prompt, Model: model, Duration: cfg.duration,
-		AspectRatio: aspect, Resolution: cfg.resolution,
+		AspectRatio: aspect, Resolution: res,
 	}
 	if cfg.imageURL != "" {
 		req.Image = imageURLContent(cfg.imageURL)

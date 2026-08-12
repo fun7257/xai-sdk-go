@@ -435,7 +435,15 @@ func (c *CompactContextResponse) CostUSD() (float64, bool) {
 	return cost.FromTicks(*u.CostInUsdTicks, true)
 }
 
+// maxOutputIndex caps completion output indexes accepted from the wire.
+// Legitimate indexes are bounded by the requested n / agent fan-out (well
+// below this); the cap keeps a malformed or hostile stream chunk from forcing
+// an unbounded slice allocation. Outputs with a negative or over-cap index
+// are dropped instead of panicking or exhausting memory.
+const maxOutputIndex = 4096
+
 // ProcessChunk accumulates a stream chunk into the response.
+// Outputs with an index outside [0, maxOutputIndex] are ignored.
 func (r *Response) ProcessChunk(chunk *xaiv1.GetChatCompletionChunk) {
 	if r.proto == nil {
 		r.proto = &xaiv1.GetChatCompletionResponse{}
@@ -453,7 +461,7 @@ func (r *Response) ProcessChunk(chunk *xaiv1.GetChatCompletionChunk) {
 	}
 	r.proto.Citations = append(r.proto.Citations, chunk.Citations...)
 	for _, o := range chunk.Outputs {
-		if o == nil {
+		if o == nil || o.Index < 0 || o.Index > maxOutputIndex {
 			continue
 		}
 		for len(r.proto.Outputs) <= int(o.Index) {

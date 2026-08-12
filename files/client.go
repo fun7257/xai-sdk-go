@@ -10,6 +10,7 @@ package files
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -44,12 +45,31 @@ type uploadCfg struct {
 	progress     func(delta, total int64)
 }
 
+// MinExpiresAfter and MaxExpiresAfter bound the upload TTL accepted by the
+// API (UploadFileInit.expires_after must be in [1h, 30d] inclusive; 0 and
+// out-of-range values are rejected server-side). Upload validates locally so
+// misconfigured TTLs fail fast instead of after streaming the whole file.
+const (
+	MinExpiresAfter = time.Hour
+	MaxExpiresAfter = 30 * 24 * time.Hour
+)
+
 // WithExpiresAfter sets the file TTL measured from upload time.
+// The API accepts TTLs in [MinExpiresAfter, MaxExpiresAfter]; Upload returns
+// an error for out-of-range values before sending any data.
 func WithExpiresAfter(d time.Duration) UploadOption {
 	return func(c *uploadCfg) {
 		s := int64(d.Seconds())
 		c.expiresAfter = &s
 	}
+}
+
+func validateExpiresAfter(seconds int64) error {
+	if seconds < int64(MinExpiresAfter.Seconds()) || seconds > int64(MaxExpiresAfter.Seconds()) {
+		return fmt.Errorf("files: expires_after %ds out of range [%s, %s]",
+			seconds, MinExpiresAfter, MaxExpiresAfter)
+	}
+	return nil
 }
 
 // WithProgress registers a progress hook called after each chunk with
@@ -71,6 +91,11 @@ func (c *Client) Upload(ctx context.Context, name string, r io.Reader, size int6
 	for _, o := range opts {
 		o(cfg)
 	}
+	if cfg.expiresAfter != nil {
+		if err = validateExpiresAfter(*cfg.expiresAfter); err != nil {
+			return nil, err
+		}
+	}
 	// Child context so abandon/error paths cancel the client stream promptly.
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -80,41 +105,65 @@ func (c *Client) Upload(ctx context.Context, name string, r io.Reader, size int6
 	if err != nil {
 		return nil, err
 	}
+	// Per gRPC client-stream semantics, Send returns io.EOF when the server has
+	// already terminated the stream; the real status (e.g. quota or size
+	// rejection) is only available from CloseAndRecv. sendAll maps that case to
+	// errServerClosedStream so it is never surfaced as a bare EOF.
+	sendErr := c.sendAll(stream, name, r, size, cfg)
+	if sendErr != nil && !errors.Is(sendErr, errServerClosedStream) {
+		err = sendErr
+		return nil, err
+	}
+	var f *xaiv1.File
+	f, err = stream.CloseAndRecv()
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}
+
+// errServerClosedStream signals that the server ended the upload stream before
+// the client finished sending; the final status comes from CloseAndRecv.
+var errServerClosedStream = errors.New("server closed upload stream early")
+
+// sendAll streams init + data chunks. It returns nil when the reader is
+// drained, errServerClosedStream when the server closed the stream early, or
+// the failing read/send error otherwise.
+func (c *Client) sendAll(stream xaiv1.Files_UploadFileClient, name string, r io.Reader, size int64, cfg *uploadCfg) error {
+	send := func(chunk *xaiv1.UploadFileChunk) error {
+		err := stream.Send(chunk)
+		if err == io.EOF {
+			return errServerClosedStream
+		}
+		return err
+	}
 	init := &xaiv1.UploadFileInit{Name: name}
 	if cfg.expiresAfter != nil {
 		init.ExpiresAfter = cfg.expiresAfter
 	}
-	if err = stream.Send(&xaiv1.UploadFileChunk{Chunk: &xaiv1.UploadFileChunk_Init{Init: init}}); err != nil {
-		cancel()
-		return nil, err
+	if err := send(&xaiv1.UploadFileChunk{Chunk: &xaiv1.UploadFileChunk_Init{Init: init}}); err != nil {
+		return err
 	}
 	buf := make([]byte, chunkSize)
 	for {
-		var n int
-		n, err = r.Read(buf)
+		n, readErr := r.Read(buf)
 		if n > 0 {
 			data := make([]byte, n)
 			copy(data, buf[:n])
-			if err = stream.Send(&xaiv1.UploadFileChunk{Chunk: &xaiv1.UploadFileChunk_Data{Data: data}}); err != nil {
-				cancel()
-				return nil, err
+			if err := send(&xaiv1.UploadFileChunk{Chunk: &xaiv1.UploadFileChunk_Data{Data: data}}); err != nil {
+				return err
 			}
 			if cfg.progress != nil {
 				cfg.progress(int64(n), size)
 			}
 		}
-		if err == io.EOF {
-			err = nil
-			break
+		if readErr == io.EOF {
+			return nil
 		}
-		if err != nil {
-			cancel()
-			return nil, err
+		if readErr != nil {
+			return fmt.Errorf("read upload source: %w", readErr)
 		}
 	}
-	var f *xaiv1.File
-	f, err = stream.CloseAndRecv()
-	return f, err
 }
 
 // UploadPath uploads a local path.
@@ -156,6 +205,7 @@ func WithListOrder(asc bool) ListOption {
 }
 
 // WithListSortBy sets the sort field: "created_at" (default), "filename", or "size".
+// Unknown values fall back to "created_at" (the option type cannot return an error).
 func WithListSortBy(sortBy string) ListOption {
 	return func(r *xaiv1.ListFilesRequest) {
 		var s xaiv1.FilesSortBy
@@ -225,6 +275,10 @@ func (c *Client) ContentWriter(ctx context.Context, fileID string, w io.Writer) 
 	if w == nil {
 		return fmt.Errorf("nil writer")
 	}
+	// Child context so early returns (e.g. writer errors) cancel the server
+	// stream promptly instead of holding it until the caller's ctx ends.
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	stream, err := c.stub.RetrieveFileContent(ctx, &xaiv1.RetrieveFileContentRequest{FileId: fileID})
 	if err != nil {
 		return err
@@ -248,11 +302,15 @@ func (c *Client) ContentWriter(ctx context.Context, fileID string, w io.Writer) 
 }
 
 // CreatePublicURL creates a public URL for a file.
-// expiresAfter is optional; when set, the public URL expires after that duration.
+// expiresAfter is optional; when set, it must be at least one second (the wire
+// value has seconds granularity) and the public URL expires after that duration.
 func (c *Client) CreatePublicURL(ctx context.Context, fileID string, expiresAfter *time.Duration) (*xaiv1.CreatePublicUrlResponse, error) {
 	req := &xaiv1.CreatePublicUrlRequest{FileId: fileID}
 	if expiresAfter != nil {
 		s := int64(expiresAfter.Seconds())
+		if s <= 0 {
+			return nil, fmt.Errorf("files: public URL expires_after must be at least 1s, got %s", *expiresAfter)
+		}
 		req.ExpiresAfter = &s
 	}
 	return c.stub.CreatePublicUrl(ctx, req)
@@ -268,8 +326,9 @@ func (c *Client) RevokePublicURL(ctx context.Context, fileID string) (*xaiv1.Rev
 type BatchUploadCallback func(index int, path string, file *xaiv1.File, err error)
 
 // BatchItem is a path or in-memory reader for batch upload (FILE-01).
-// Exactly one of Path or Reader must be set. When Reader is set, Name is required
-// and Size should be the known size (or -1 if unknown; Upload may still work for some backends).
+// Exactly one of Path or Reader must be set; setting both (or neither) yields
+// an error for that item. When Reader is set, Name is required and Size should
+// be the known size (or -1 if unknown; Upload may still work for some backends).
 type BatchItem struct {
 	Path   string
 	Reader io.Reader
@@ -321,6 +380,12 @@ func (c *Client) BatchUploadWithOptions(ctx context.Context, paths []string, opt
 }
 
 // BatchUploadItems uploads a mix of paths and in-memory readers (FILE-01).
+//
+// At most concurrency (default 4) worker goroutines run; items are processed
+// in order of submission. A panic from an item upload or the onComplete
+// callback is recovered into that item's error instead of crashing the
+// process (the panic happens on an SDK-owned goroutine the caller could not
+// otherwise recover from).
 func (c *Client) BatchUploadItems(ctx context.Context, items []BatchItem, opts ...BatchUploadOption) ([]*xaiv1.File, []error) {
 	cfg := &batchCfg{concurrency: 4}
 	for _, o := range opts {
@@ -329,49 +394,74 @@ func (c *Client) BatchUploadItems(ctx context.Context, items []BatchItem, opts .
 	if cfg.concurrency < 1 {
 		cfg.concurrency = 4
 	}
-	type result struct {
-		i    int
-		file *xaiv1.File
-		err  error
-	}
-	ch := make(chan result, len(items))
-	sem := make(chan struct{}, cfg.concurrency)
-	var cbMu sync.Mutex
-	for i, it := range items {
-		i, it := i, it
-		go func() {
-			sem <- struct{}{}
-			defer func() { <-sem }()
-			var f *xaiv1.File
-			var err error
-			label := it.Path
-			if it.Path != "" {
-				f, err = c.UploadPath(ctx, it.Path, cfg.uploadOpts...)
-			} else if it.Reader != nil {
-				name := it.Name
-				if name == "" {
-					err = fmt.Errorf("batch item %d: Name required when using Reader", i)
-				} else {
-					label = name
-					f, err = c.Upload(ctx, name, it.Reader, it.Size, cfg.uploadOpts...)
-				}
-			} else {
-				err = fmt.Errorf("batch item %d: Path or Reader required", i)
-			}
-			if cfg.onComplete != nil {
-				cbMu.Lock()
-				cfg.onComplete(i, label, f, err)
-				cbMu.Unlock()
-			}
-			ch <- result{i: i, file: f, err: err}
-		}()
-	}
 	filesOut := make([]*xaiv1.File, len(items))
 	errs := make([]error, len(items))
-	for range items {
-		r := <-ch
-		filesOut[r.i] = r.file
-		errs[r.i] = r.err
+	workers := cfg.concurrency
+	if workers > len(items) {
+		workers = len(items)
 	}
+	idxCh := make(chan int)
+	var wg sync.WaitGroup
+	var cbMu sync.Mutex
+	for w := 0; w < workers; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := range idxCh {
+				label, f, err := c.uploadBatchItem(ctx, i, items[i], cfg.uploadOpts)
+				if cfg.onComplete != nil {
+					if cbErr := runBatchCallback(&cbMu, cfg.onComplete, i, label, f, err); cbErr != nil {
+						err = errors.Join(err, cbErr)
+					}
+				}
+				filesOut[i], errs[i] = f, err
+			}
+		}()
+	}
+	for i := range items {
+		idxCh <- i
+	}
+	close(idxCh)
+	wg.Wait()
 	return filesOut, errs
+}
+
+// uploadBatchItem uploads one batch item, converting panics into errors.
+func (c *Client) uploadBatchItem(ctx context.Context, i int, it BatchItem, uploadOpts []UploadOption) (label string, f *xaiv1.File, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("batch item %d: panic during upload: %v", i, r)
+		}
+	}()
+	label = it.Path
+	switch {
+	case it.Path != "" && it.Reader != nil:
+		err = fmt.Errorf("batch item %d: exactly one of Path or Reader must be set", i)
+	case it.Path != "":
+		f, err = c.UploadPath(ctx, it.Path, uploadOpts...)
+	case it.Reader != nil:
+		if it.Name == "" {
+			err = fmt.Errorf("batch item %d: Name required when using Reader", i)
+		} else {
+			label = it.Name
+			f, err = c.Upload(ctx, it.Name, it.Reader, it.Size, uploadOpts...)
+		}
+	default:
+		err = fmt.Errorf("batch item %d: Path or Reader required", i)
+	}
+	return label, f, err
+}
+
+// runBatchCallback invokes the user callback under the shared mutex,
+// converting a callback panic into an error for that item.
+func runBatchCallback(mu *sync.Mutex, cb BatchUploadCallback, i int, label string, f *xaiv1.File, err error) (cbErr error) {
+	mu.Lock()
+	defer mu.Unlock()
+	defer func() {
+		if r := recover(); r != nil {
+			cbErr = fmt.Errorf("batch item %d: onComplete callback panicked: %v", i, r)
+		}
+	}()
+	cb(i, label, f, err)
+	return nil
 }

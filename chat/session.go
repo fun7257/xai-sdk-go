@@ -468,14 +468,16 @@ func (ch *Chat) spanAttrs() []attribute.KeyValue {
 }
 
 // wrapMultiResponses builds one Response per completion index for multi-n results.
+// Output indexes outside [0, maxOutputIndex] are ignored when sizing the result
+// so malformed responses cannot force an unbounded allocation.
 func wrapMultiResponses(pb *xaiv1.GetChatCompletionResponse, n int32) []*Response {
 	if pb == nil {
 		return nil
 	}
-	// Collect max assistant index present.
+	// Collect max in-range output index present.
 	maxIdx := int32(-1)
 	for _, o := range pb.Outputs {
-		if o == nil {
+		if o == nil || o.Index < 0 || o.Index > maxOutputIndex {
 			continue
 		}
 		if o.Index > maxIdx {
@@ -483,7 +485,7 @@ func wrapMultiResponses(pb *xaiv1.GetChatCompletionResponse, n int32) []*Respons
 		}
 	}
 	count := int(n)
-	if maxIdx+1 > int32(count) {
+	if int(maxIdx)+1 > count {
 		count = int(maxIdx) + 1
 	}
 	if count < 1 {

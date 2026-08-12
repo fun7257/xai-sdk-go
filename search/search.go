@@ -171,9 +171,24 @@ func UncheckedNewsSource(country string, excluded []string, opts ...SourceOption
 	return src
 }
 
-// XSource builds an X source. Optional WithPostFavoriteCount / WithPostViewCount.
-func XSource(included, excluded []string, opts ...SourceOption) *xaiv1.Source {
+// ValidateXHandles returns an error when included and excluded handles are both set.
+func ValidateXHandles(included, excluded []string) error {
+	if len(included) > 0 && len(excluded) > 0 {
+		return fmt.Errorf("search: included_x_handles and excluded_x_handles are mutually exclusive")
+	}
+	return nil
+}
+
+// XSource builds an X source (primary). Optional WithPostFavoriteCount /
+// WithPostViewCount. Validates included/excluded handle mutual exclusion
+// unless WithoutDomainValidation, matching tools.XSearch behavior.
+func XSource(included, excluded []string, opts ...SourceOption) (*xaiv1.Source, error) {
 	cfg := applySourceOpts(opts)
+	if cfg.validateDomains {
+		if err := ValidateXHandles(included, excluded); err != nil {
+			return nil, err
+		}
+	}
 	xs := &xaiv1.XSource{
 		IncludedXHandles: included, ExcludedXHandles: excluded,
 	}
@@ -183,7 +198,13 @@ func XSource(included, excluded []string, opts ...SourceOption) *xaiv1.Source {
 	if cfg.postViewCount != nil {
 		xs.PostViewCount = cfg.postViewCount
 	}
-	return &xaiv1.Source{Source: &xaiv1.Source_X{X: xs}}
+	return &xaiv1.Source{Source: &xaiv1.Source_X{X: xs}}, nil
+}
+
+// UncheckedXSource skips handle validation.
+func UncheckedXSource(included, excluded []string, opts ...SourceOption) *xaiv1.Source {
+	src, _ := XSource(included, excluded, append(opts, WithoutDomainValidation())...)
+	return src
 }
 
 // RSSSource builds an RSS source.

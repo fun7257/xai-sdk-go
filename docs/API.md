@@ -188,10 +188,10 @@
 |------|------|
 | `Parameters` | Live Search 参数；`Proto()` → `*xaiv1.SearchParameters` |
 | `Mode` | `ModeAuto` / `ModeOn` / `ModeOff` |
-| `WebSource` / `NewsSource` | 校验域名；互斥 allowed/excluded |
-| `UncheckedWebSource` / `UncheckedNewsSource` | 跳过校验 |
-| `XSource` / `RSSSource` | X / RSS 源 |
-| `ValidateWebsites` | 域名规则 |
+| `WebSource` / `NewsSource` / `XSource` | 校验源（域名/handle 互斥），返回 error |
+| `UncheckedWebSource` / `UncheckedNewsSource` / `UncheckedXSource` | 跳过校验 |
+| `RSSSource` | RSS 源 |
+| `ValidateWebsites` / `ValidateXHandles` | 域名 / X handle 规则 |
 | `MaxWebsites` | 最大网站数常量 `5` |
 | `WithSafeSearch` 等 | Source 选项 |
 

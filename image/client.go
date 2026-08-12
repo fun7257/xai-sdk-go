@@ -45,7 +45,8 @@ type sampleCfg struct {
 	format       xaiv1.ImageFormat
 	aspectStr    string
 	aspectSet    bool
-	resolution   *xaiv1.ImageResolution
+	resStr       string
+	resSet       bool
 	storage      *files.StorageOptions
 }
 
@@ -93,11 +94,12 @@ func WithAspectRatio(ar string) SampleOption {
 	}
 }
 
-// WithResolution sets resolution ("1k" or "2k"). Unknown values default to 1k.
+// WithResolution sets resolution ("1k" or "2k").
+// Unknown values cause Sample/Samples/Prepare to return an error (no silent fallback).
 func WithResolution(r string) SampleOption {
 	return func(c *sampleCfg) {
-		v := resolution(r)
-		c.resolution = &v
+		c.resStr = r
+		c.resSet = true
 	}
 }
 
@@ -123,11 +125,15 @@ func aspect(s string) (xaiv1.ImageAspectRatio, error) {
 	return 0, fmt.Errorf("unknown image aspect ratio %q", s)
 }
 
-func resolution(s string) xaiv1.ImageResolution {
-	if s == "2k" {
-		return xaiv1.ImageResolution_IMG_RESOLUTION_2K
+func resolution(s string) (xaiv1.ImageResolution, error) {
+	switch s {
+	case "1k":
+		return xaiv1.ImageResolution_IMG_RESOLUTION_1K, nil
+	case "2k":
+		return xaiv1.ImageResolution_IMG_RESOLUTION_2K, nil
+	default:
+		return 0, fmt.Errorf("unknown image resolution %q (want 1k or 2k)", s)
 	}
-	return xaiv1.ImageResolution_IMG_RESOLUTION_1K
 }
 
 func imageURLContent(url string) *xaiv1.ImageUrlContent {
@@ -162,6 +168,14 @@ func (c *Client) buildRequest(prompt, model string, cfg *sampleCfg) (*xaiv1.Gene
 		}
 		aspectRatio = &v
 	}
+	var res *xaiv1.ImageResolution
+	if cfg.resSet {
+		v, err := resolution(cfg.resStr)
+		if err != nil {
+			return nil, err
+		}
+		res = &v
+	}
 
 	format := cfg.format
 	if format == xaiv1.ImageFormat_IMG_FORMAT_INVALID {
@@ -169,7 +183,7 @@ func (c *Client) buildRequest(prompt, model string, cfg *sampleCfg) (*xaiv1.Gene
 	}
 	req := &xaiv1.GenerateImageRequest{
 		Prompt: prompt, Model: model, User: cfg.user, Format: format,
-		N: cfg.n, AspectRatio: aspectRatio, Resolution: cfg.resolution,
+		N: cfg.n, AspectRatio: aspectRatio, Resolution: res,
 	}
 	if cfg.imageURL != "" {
 		req.Image = imageURLContent(cfg.imageURL)

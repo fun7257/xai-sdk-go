@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+### Fixed
+
+- **files.Upload**: a server-side stream abort (quota/size rejection) now surfaces the real gRPC status instead of a bare `EOF` (`Send` == `io.EOF` → status via `CloseAndRecv`).
+- **chat streaming hardening**: `Response.ProcessChunk` and multi-response wrapping drop outputs with negative or absurdly large indexes instead of panicking / allocating unbounded memory on malformed stream data.
+- **files.ContentWriter**: cancels the server stream promptly on early returns (e.g. writer errors) instead of holding it until the caller's context ends.
+- **files.BatchUploadItems**: bounded worker pool (no longer one goroutine per item); `Path`+`Reader` both set is now an error for that item; panics from an item upload or the `onComplete` callback are recovered into that item's error instead of crashing the process.
+- **collections.UploadDocument**: `WithDeleteOnAddFailure` cleanup now runs on a context detached from the caller's (30s bound), so orphan files are still deleted when the add failed due to cancellation/deadline.
+- **batch.Result.Error**: preserves structured status details (`status.FromProto`) instead of rebuilding from code+message only.
+
+### Changed
+
+- **Strict enum inputs**: `image.WithResolution`, `video.WithResolution`, and `collections.WithMetric` now cause the call to return an error for unknown values (previously silent fallback), matching aspect-ratio handling. `tools.Mode` / `files.WithListSortBy` document their fallback.
+- **search.XSource** now validates included/excluded handle mutual exclusion and returns `(*xaiv1.Source, error)`, matching `WebSource`/`NewsSource`; use `UncheckedXSource` for the previous no-error shape. Added `ValidateXHandles`.
+- **tools bool options**: `WithImageUnderstanding(false)` / `WithImageSearch(false)` / `WithXMediaUnderstanding(false, false)` now send an explicit `false` on the wire (previously a no-op); unset options remain absent.
+- **files TTL validation**: `Upload` rejects `WithExpiresAfter` values outside `[1h, 30d]` (`MinExpiresAfter` / `MaxExpiresAfter`) before streaming; `CreatePublicURL` rejects sub-second TTLs.
+- Docs: cleartext warnings on `xai.WithInsecure` and `tools.WithMCPAuth` / `tools.MCP`.
+
+### Dependencies
+
+- Bumped `go.opentelemetry.io/otel{,/sdk,/trace,/metric}` to v1.45.0, `golang.org/x/net` to v0.57.0, `golang.org/x/text` to v0.41.0, `golang.org/x/sys` to v0.47.0 (clears all govulncheck findings in imported packages).
+
 ## [0.1.2] — 2026-08-11
 
 ### Changed
