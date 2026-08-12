@@ -31,3 +31,16 @@ func TestPrepareRejectsUnknownResolution(t *testing.T) {
 		t.Fatalf("unset resolution must stay nil, got %v", req.Resolution)
 	}
 }
+
+// A negative index is caller misuse; accessors must degrade, not panic.
+func TestResponseNegativeIndexIsSafe(t *testing.T) {
+	r := image.NewResponse(&xaiv1.ImageResponse{
+		Images: []*xaiv1.GeneratedImage{{Image: &xaiv1.GeneratedImage_Url{Url: "https://x/img"}}},
+	}, -1)
+	if _, err := r.URL(); err == nil {
+		t.Fatal("expected error for negative index")
+	}
+	if !r.RespectModeration() {
+		t.Fatal("missing image defaults to moderation-respecting")
+	}
+}
