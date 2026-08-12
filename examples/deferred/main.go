@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	xai "github.com/fun7257/xai-sdk-go"
 	"github.com/fun7257/xai-sdk-go/chat"
@@ -20,8 +21,11 @@ func main() {
 		log.Fatal(err)
 	}
 	defer client.Close()
+	// Deferred completions poll (default up to 10m); bound the wait.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
 	c := client.Chat.Create(types.ModelGrok3, chat.WithMessages(chat.User("hi")))
-	resp, err := c.Defer(context.Background())
+	resp, err := c.Defer(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -1,4 +1,4 @@
-.PHONY: proto test vet fmt examples race lint vuln check integration
+.PHONY: proto test vet fmt examples race lint vuln check cover integration
 
 # Regenerate xai/api/v1 from third_party protos. See docs/PROTO.md.
 # Requires: protoc, protoc-gen-go, protoc-gen-go-grpc
@@ -19,6 +19,13 @@ proto:
 
 test:
 	go test ./...
+
+# Coverage profile + summary (same shape as CI). Generated xai/api/v1 code is
+# excluded from the numbers so the total reflects hand-written packages.
+cover:
+	go test ./... -coverprofile=coverage.out -covermode=atomic
+	@grep -v '/xai/api/v1/' coverage.out > coverage.out.tmp && mv coverage.out.tmp coverage.out
+	go tool cover -func=coverage.out | tail -n 1
 
 vet:
 	go vet ./...

@@ -232,8 +232,8 @@
 
 | 方法 | 说明 |
 |------|------|
-| `Upload` / `UploadPath` | 分块上传 |
-| `List` / `Get` / `Delete` | 元数据 |
+| `Upload` / `UploadPath` | 分块上传（本地校验文件名与 TTL） |
+| `List` / `ListAll` / `Get` / `Delete` | 元数据（`ListAll` 自动翻页） |
 | `Content` | 下载到 `[]byte`（有 `MaxContentBytes`） |
 | `ContentWriter` | 流式写入 `io.Writer`（大文件） |
 | `CreatePublicURL` / `RevokePublicURL` | 公开链接 |
@@ -241,6 +241,7 @@
 
 **上传选项**：`WithExpiresAfter` / `WithProgress`。  
 **列表选项**：`WithListLimit` / `PaginationToken` / `Order` / `SortBy` / `Filter`。  
+**下载选项**：`WithContentFormat`（`original` / `text`）。  
 **批量选项**：`WithBatchConcurrency` / `WithBatchOnComplete` / `WithBatchUploadOptions`。  
 **StorageOptions**：图像/视频存储联动；`Proto` / `StorageFromProto`。
 
@@ -250,7 +251,7 @@
 
 | 方法 | 说明 |
 |------|------|
-| `Create` / `Add` / `Get` / `Cancel` / `List` | 批任务生命周期 |
+| `Create` / `Add` / `Get` / `Cancel` / `List` / `ListAll` | 批任务生命周期（`ListAll` 自动翻页） |
 | `ListBatchRequests` / `ListBatchResults` / `GetBatchRequestResult` | 明细与结果 |
 | `ChatBatchRequest` / `ImageBatchRequest` / `VideoBatchRequest` | 包装单条请求 |
 | `NewResult` / `WrapResults` | 结果包装 |
@@ -266,16 +267,17 @@
 
 | 方法 | 说明 |
 |------|------|
-| `Create` / `List` / `Get` / `Delete` / `Update` | 集合 |
+| `Create` / `List` / `ListAll` / `Get` / `Delete` / `Update` | 集合（`ListAll` 自动翻页） |
 | `GenerateDescription` | 生成描述 |
 | `UploadDocument` / `AddExistingDocument` / `RemoveDocument` | 文档入出集 |
-| `UpdateDocument` / `GetDocument` / `ListDocuments` / `BatchGetDocuments` | 文档元数据 |
+| `UpdateDocument` / `GetDocument` / `ListDocuments` / `ListAllDocuments` / `BatchGetDocuments` | 文档元数据（`ListAllDocuments` 自动翻页） |
 | `ReindexDocument` / `WaitForIndexing` | 索引 |
 | `Search` / `SearchSimple` | 检索（Documents 走业务 API） |
 
 辅助：`FieldDefinition` / `AddFieldDefinition` / `DeleteFieldDefinition` / `ValidateChunkConfiguration`。  
 Create 选项：`WithDescription` / `WithIndexModel` / `WithChunkConfiguration` / `WithMetric` / `WithFieldDefinitions`。  
 Upload 选项：`WithDocumentFields` / `WithWaitForIndexing` / `WithUploadOptions` / `WithDeleteOnAddFailure`。  
+Documents 列表选项：`WithDocumentsFilter` / `WithDocumentsName` / `WithDocumentsLimit` / `WithDocumentsPaginationToken`。  
 Search 选项：`WithSearchLimit` / `WithSearchInstructions` / `WithRetrievalMode`。
 
 ---
@@ -348,4 +350,4 @@ go doc github.com/fun7257/xai-sdk-go/xai/api/v1
 ```
 
 pkg.go.dev（发版 tag 后）：  
-`https://pkg.go.dev/github.com/fun7257/xai-sdk-go@v0.1.1`
+`https://pkg.go.dev/github.com/fun7257/xai-sdk-go@v0.1.2`

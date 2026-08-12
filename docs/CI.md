@@ -6,7 +6,7 @@ How GitHub Actions run for this **library module** (no binary release artifacts)
 
 | Workflow | File | Purpose |
 |----------|------|---------|
-| **ci** | [`.github/workflows/ci.yaml`](../.github/workflows/ci.yaml) | Offline gates: vet, test, race (scoped), examples, lint, govulncheck |
+| **ci** | [`.github/workflows/ci.yaml`](../.github/workflows/ci.yaml) | Offline gates: vet, test + coverage profile (uploaded artifact), race (scoped), examples, lint, govulncheck |
 | **integration** | [`.github/workflows/integration.yml`](../.github/workflows/integration.yml) | Optional live API smoke (`//go:build integration`) |
 
 Local equivalents: [`CONTRIBUTING.md`](../CONTRIBUTING.md) (`make check`, `race`, `lint`, `vuln`, `integration`).

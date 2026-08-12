@@ -205,7 +205,7 @@ resps, err := session.Defers(ctx, chat.WithDeferN(2), chat.WithDeferTimeout(10*t
 | Web / News / X / RSS sources | `WebSource`, `NewsSource`, `XSource`, `RSSSource` |
 | safe_search | `WithSafeSearch` (default true) |
 | X favorite/view thresholds | `WithPostFavoriteCount`, `WithPostViewCount` |
-| Domain mutex / max 5 sites | validated by default on Web/News |
+| Domain mutex / max 5 sites | validated by default on Web/News; X handle mutex on XSource |
 
 ### Intentional differences
 
@@ -226,7 +226,7 @@ resps, err := session.Defers(ctx, chat.WithDeferN(2), chat.WithDeferTimeout(10*t
 | n images | `WithN` |
 | URL / base64 format | `WithFormatURL` / `WithFormatBase64` (default URL) |
 | Reference URL / file_id (single & multi) | options + mutual exclusion rules |
-| Aspect / resolution | `WithAspectRatio` (unknown → error), `WithResolution` |
+| Aspect / resolution | `WithAspectRatio` / `WithResolution` (unknown → error) |
 | Storage options | `WithStorage` |
 | Response URL/Base64/moderation/storage/public URL | accessors |
 | Download bytes | `Download` (https/http, size cap) |

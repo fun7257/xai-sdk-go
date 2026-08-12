@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"go.opentelemetry.io/otel/attribute"
 	"google.golang.org/grpc"
@@ -72,13 +73,43 @@ func validateExpiresAfter(seconds int64) error {
 	return nil
 }
 
+// MaxFilenameChars is the maximum filename length accepted by the API
+// (Unicode characters, per UploadFileInit.name).
+const MaxFilenameChars = 255
+
+// validateFilename enforces the UploadFileInit.name contract: at most 255
+// Unicode chars; no ASCII control chars, line terminators (CR/LF/NEL/LS/PS),
+// null bytes, `"`, `;`, or `\` — these would break Content-Disposition
+// headers server-side. Validated locally so bad names fail before streaming.
+func validateFilename(name string) error {
+	if name == "" {
+		return fmt.Errorf("files: filename required")
+	}
+	if utf8.RuneCountInString(name) > MaxFilenameChars {
+		return fmt.Errorf("files: filename exceeds %d characters", MaxFilenameChars)
+	}
+	for _, r := range name {
+		switch {
+		case r < 0x20 || r == 0x7f:
+			return fmt.Errorf("files: filename contains control character %q", r)
+		case r == 0x85 || r == 0x2028 || r == 0x2029:
+			return fmt.Errorf("files: filename contains line terminator %q", r)
+		case r == '"' || r == ';' || r == '\\':
+			return fmt.Errorf("files: filename contains forbidden character %q", r)
+		}
+	}
+	return nil
+}
+
 // WithProgress registers a progress hook called after each chunk with
 // (bytes_in_chunk, total_size). total may be 0 if unknown.
 func WithProgress(fn func(delta, total int64)) UploadOption {
 	return func(c *uploadCfg) { c.progress = fn }
 }
 
-// Upload streams a file to the API. name is the remote filename.
+// Upload streams a file to the API. name is the remote filename: at most
+// MaxFilenameChars Unicode characters, without control characters, line
+// terminators, `"`, `;`, or `\` (validated locally before streaming).
 func (c *Client) Upload(ctx context.Context, name string, r io.Reader, size int64, opts ...UploadOption) (*xaiv1.File, error) {
 	ctx, span := telemetry.StartSpan(ctx, telemetry.SpanFilesUpload,
 		attribute.String("gen_ai.system", "xai"),
@@ -90,6 +121,9 @@ func (c *Client) Upload(ctx context.Context, name string, r io.Reader, size int6
 	cfg := &uploadCfg{}
 	for _, o := range opts {
 		o(cfg)
+	}
+	if err = validateFilename(name); err != nil {
+		return nil, err
 	}
 	if cfg.expiresAfter != nil {
 		if err = validateExpiresAfter(*cfg.expiresAfter); err != nil {
@@ -240,6 +274,34 @@ func (c *Client) List(ctx context.Context, opts ...ListOption) (*xaiv1.ListFiles
 	return c.stub.ListFiles(ctx, req)
 }
 
+// ListAll returns metadata for all files, following pagination tokens until
+// the final page. Options apply to every page request; a caller-provided
+// WithListPaginationToken sets the starting page only.
+func (c *Client) ListAll(ctx context.Context, opts ...ListOption) ([]*xaiv1.File, error) {
+	var out []*xaiv1.File
+	token := ""
+	for {
+		req := &xaiv1.ListFilesRequest{}
+		for _, o := range opts {
+			o(req)
+		}
+		if token != "" {
+			req.PaginationToken = &token
+		}
+		resp, err := c.stub.ListFiles(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, resp.GetData()...)
+		next := resp.GetPaginationToken()
+		// Stop on the final page or a non-advancing token (defensive).
+		if next == "" || next == token {
+			return out, nil
+		}
+		token = next
+	}
+}
+
 // Get retrieves file metadata.
 func (c *Client) Get(ctx context.Context, fileID string) (*xaiv1.File, error) {
 	return c.stub.RetrieveFile(ctx, &xaiv1.RetrieveFileRequest{FileId: fileID})
@@ -250,9 +312,38 @@ func (c *Client) Delete(ctx context.Context, fileID string) (*xaiv1.DeleteFileRe
 	return c.stub.DeleteFile(ctx, &xaiv1.DeleteFileRequest{FileId: fileID})
 }
 
+// ContentOption configures Content / ContentWriter downloads.
+type ContentOption func(*contentCfg)
+type contentCfg struct {
+	formatStr string
+	formatSet bool
+}
+
+// WithContentFormat sets the download format: "original" (default, raw bytes)
+// or "text" (server-side extracted text). Unknown values cause
+// Content/ContentWriter to return an error (no silent fallback).
+func WithContentFormat(f string) ContentOption {
+	return func(c *contentCfg) {
+		c.formatStr = f
+		c.formatSet = true
+	}
+}
+
+func downloadFormat(s string) (xaiv1.DownloadFormat, error) {
+	switch s {
+	case "original":
+		return xaiv1.DownloadFormat_DOWNLOAD_FORMAT_ORIGINAL, nil
+	case "text":
+		return xaiv1.DownloadFormat_DOWNLOAD_FORMAT_TEXT, nil
+	default:
+		return 0, fmt.Errorf("unknown content format %q (want original or text)", s)
+	}
+}
+
 // Content downloads file bytes into memory, capped at MaxContentBytes (512 MiB).
-// For unbounded/large objects use ContentWriter.
-func (c *Client) Content(ctx context.Context, fileID string) ([]byte, error) {
+// For unbounded/large objects use ContentWriter. On error no partial data is
+// returned.
+func (c *Client) Content(ctx context.Context, fileID string, opts ...ContentOption) ([]byte, error) {
 	var buf []byte
 	err := c.ContentWriter(ctx, fileID, writerFunc(func(p []byte) (int, error) {
 		if int64(len(buf))+int64(len(p)) > MaxContentBytes {
@@ -260,8 +351,11 @@ func (c *Client) Content(ctx context.Context, fileID string) ([]byte, error) {
 		}
 		buf = append(buf, p...)
 		return len(p), nil
-	}))
-	return buf, err
+	}), opts...)
+	if err != nil {
+		return nil, err
+	}
+	return buf, nil
 }
 
 // writerFunc adapts a function to io.Writer.
@@ -271,15 +365,27 @@ func (f writerFunc) Write(p []byte) (int, error) { return f(p) }
 
 // ContentWriter streams file content chunks to w without buffering the full file
 // in the SDK (FILE-04). Callers own backpressure and total size limits.
-func (c *Client) ContentWriter(ctx context.Context, fileID string, w io.Writer) error {
+func (c *Client) ContentWriter(ctx context.Context, fileID string, w io.Writer, opts ...ContentOption) error {
 	if w == nil {
 		return fmt.Errorf("nil writer")
+	}
+	cfg := &contentCfg{}
+	for _, o := range opts {
+		o(cfg)
+	}
+	req := &xaiv1.RetrieveFileContentRequest{FileId: fileID}
+	if cfg.formatSet {
+		f, err := downloadFormat(cfg.formatStr)
+		if err != nil {
+			return err
+		}
+		req.Format = &f
 	}
 	// Child context so early returns (e.g. writer errors) cancel the server
 	// stream promptly instead of holding it until the caller's ctx ends.
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	stream, err := c.stub.RetrieveFileContent(ctx, &xaiv1.RetrieveFileContentRequest{FileId: fileID})
+	stream, err := c.stub.RetrieveFileContent(ctx, req)
 	if err != nil {
 		return err
 	}

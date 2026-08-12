@@ -784,14 +784,15 @@ func (ch *Chat) Parse(ctx context.Context, schemaJSON []byte, dest any) (*Respon
 
 	s := string(schemaJSON)
 	// Apply on cloned request via temporary mutation of session format then Sample.
+	// Restore via defer so a panicking Sample cannot leave the session mutated.
 	prev := ch.req.ResponseFormat
 	ch.req.ResponseFormat = &xaiv1.ResponseFormat{
 		FormatType: xaiv1.FormatType_FORMAT_TYPE_JSON_SCHEMA,
 		Schema:     &s,
 	}
+	defer func() { ch.req.ResponseFormat = prev }()
 	var resp *Response
 	resp, err = ch.Sample(ctx)
-	ch.req.ResponseFormat = prev
 	if err != nil {
 		return nil, err
 	}
@@ -913,6 +914,8 @@ func (ch *Chat) Compact(ctx context.Context) (*CompactContextResponse, error) {
 		return nil, err
 	}
 	res := &CompactContextResponse{proto: pb}
-	_ = ch.Append(res)
+	if err := ch.Append(res); err != nil {
+		return nil, err
+	}
 	return res, nil
 }

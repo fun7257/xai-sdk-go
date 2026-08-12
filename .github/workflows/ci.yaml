@@ -44,8 +44,21 @@ jobs:
       - name: Vet
         run: go vet ./...
 
-      - name: Test
-        run: go test ./...
+      - name: Test (with coverage)
+        run: go test ./... -coverprofile=coverage.out -covermode=atomic
+
+      # Generated xai/api/v1 code is excluded so the total tracks hand-written packages.
+      - name: Coverage summary
+        run: |
+          grep -v '/xai/api/v1/' coverage.out > coverage.out.tmp && mv coverage.out.tmp coverage.out
+          go tool cover -func=coverage.out | tail -n 1
+
+      - name: Upload coverage profile
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out
+          retention-days: 14
 
       - name: Race (concurrent packages)
         run: go test -race ./files/ ./collections/ ./chat/ ./internal/conn/ ./batch/

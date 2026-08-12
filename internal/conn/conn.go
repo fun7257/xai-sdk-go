@@ -64,9 +64,13 @@ const DefaultServiceConfig = `{
 }`
 
 // Dial creates a gRPC connection with Bearer auth and SDK metadata.
+// extraMD must hold an even number of elements (flattened key/value pairs).
 func Dial(ctx context.Context, target, apiKey string, insecureDial bool, timeout time.Duration, extraMD []string, extra []grpc.DialOption) (*grpc.ClientConn, error) {
 	if apiKey == "" {
 		return nil, fmt.Errorf("empty xAI API key provided: %w", ErrEmptyAPIKey)
+	}
+	if len(extraMD)%2 != 0 {
+		return nil, fmt.Errorf("metadata requires an even number of elements (key/value pairs), got %d", len(extraMD))
 	}
 	const mib = 1 << 20
 	opts := []grpc.DialOption{
@@ -124,6 +128,9 @@ type BearerCredentials struct {
 // authorization to Bearer <APIKey> last so callers cannot clobber the token
 // via a custom "authorization" metadata key. Prefer not setting reserved keys
 // (authorization, xai-sdk-version, xai-sdk-language) in user metadata.
+//
+// The PerRPCCredentials API carries map[string]string, so only the first
+// value of a repeated metadata key is sent.
 func (b BearerCredentials) GetRequestMetadata(ctx context.Context, _ ...string) (map[string]string, error) {
 	out := map[string]string{}
 	for k, vals := range b.Metadata {

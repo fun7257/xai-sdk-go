@@ -444,6 +444,9 @@ const maxOutputIndex = 4096
 
 // ProcessChunk accumulates a stream chunk into the response.
 // Outputs with an index outside [0, maxOutputIndex] are ignored.
+// Response-level fields (id, model, usage, ...) are only overwritten by
+// chunks that carry them, so a trailing chunk without usage cannot erase
+// previously accumulated values.
 func (r *Response) ProcessChunk(chunk *xaiv1.GetChatCompletionChunk) {
 	if r.proto == nil {
 		r.proto = &xaiv1.GetChatCompletionResponse{}
@@ -451,11 +454,21 @@ func (r *Response) ProcessChunk(chunk *xaiv1.GetChatCompletionChunk) {
 	if chunk == nil {
 		return
 	}
-	r.proto.Id = chunk.Id
-	r.proto.Model = chunk.Model
-	r.proto.SystemFingerprint = chunk.SystemFingerprint
-	r.proto.Usage = chunk.Usage
-	r.proto.ServiceTier = chunk.ServiceTier
+	if chunk.Id != "" {
+		r.proto.Id = chunk.Id
+	}
+	if chunk.Model != "" {
+		r.proto.Model = chunk.Model
+	}
+	if chunk.SystemFingerprint != "" {
+		r.proto.SystemFingerprint = chunk.SystemFingerprint
+	}
+	if chunk.Usage != nil {
+		r.proto.Usage = chunk.Usage
+	}
+	if chunk.ServiceTier != xaiv1.ServiceTier_SERVICE_TIER_UNSPECIFIED {
+		r.proto.ServiceTier = chunk.ServiceTier
+	}
 	if chunk.Created != nil {
 		r.proto.Created = chunk.Created
 	}

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	xai "github.com/fun7257/xai-sdk-go"
 	"github.com/fun7257/xai-sdk-go/video"
@@ -24,8 +25,11 @@ func main() {
 	}
 	defer client.Close()
 
+	// Video generation polls (default up to 10m); bound the wait.
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
 	model := envOr("XAI_VIDEO_MODEL", "grok-imagine-video")
-	resp, err := client.Video.Generate(context.Background(), "a cat walks", model,
+	resp, err := client.Video.Generate(ctx, "a cat walks", model,
 		video.WithDuration(1),
 		video.WithResolution("480p"),
 	)

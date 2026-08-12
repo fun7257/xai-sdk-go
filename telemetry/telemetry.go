@@ -6,13 +6,16 @@
 //
 // Environment variables:
 //
-//	XAI_SDK_DISABLE_TRACING                      - disable all spans
+//	XAI_SDK_DISABLE_TRACING                        - disable all spans
 //	XAI_SDK_DISABLE_SENSITIVE_TELEMETRY_ATTRIBUTES - omit prompts/content attributes
+//	XAI_SDK_INCLUDE_SENSITIVE_TELEMETRY_ATTRIBUTES - required (truthy) before
+//	    AttrPrompt attaches prompt content; sensitive attributes stay off otherwise
 package telemetry
 
 import (
 	"context"
 	"os"
+	"strings"
 	"sync"
 
 	"go.opentelemetry.io/otel"
@@ -38,7 +41,7 @@ var noopTracer = noop.NewTracerProvider().Tracer(tracerName)
 
 func envTruthy(name string) bool {
 	v := os.Getenv(name)
-	return v == "1" || v == "true" || v == "TRUE"
+	return v == "1" || strings.EqualFold(v, "true")
 }
 
 // TracingDisabled is true when XAI_SDK_DISABLE_TRACING is set.
@@ -56,15 +59,19 @@ var (
 	setupCalled bool
 )
 
-// SetTracer injects a custom Tracer (tests / advanced). Does not install a global provider.
+// SetTracer injects a custom Tracer (tests / advanced). Does not install a
+// global provider. A non-nil tracer marks tracing as enabled (Enabled returns
+// true); passing nil restores the noop tracer and disables it.
 func SetTracer(t trace.Tracer) {
 	mu.Lock()
 	defer mu.Unlock()
 	if t == nil {
 		tracer = noop.NewTracerProvider().Tracer(tracerName)
+		setupCalled = false
 		return
 	}
 	tracer = t
+	setupCalled = true
 }
 
 // Tracer returns the current tracer (noop unless Setup/SetTracer).
@@ -171,9 +178,9 @@ func ChatRequestAttrs(model string, messageCount int, conversationID string, ext
 	return attrs
 }
 
-// SetupConsoleTracerProvider builds a stdout-friendly tracer provider using a
-// simple span processor that writes nothing by default unless the caller wires
-// an exporter. Prefer Setup with TracerProvider for production OTLP.
+// SetupConsoleRecipeDoc returns a pointer to the exporter wiring recipes.
+// The SDK does not bundle exporters; callers install their own and pass a
+// TracerProvider to Setup.
 //
 // Recipe for OTLP (TEL-01) — callers install the exporter themselves:
 //

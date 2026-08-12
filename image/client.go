@@ -285,7 +285,7 @@ func NewResponse(proto *xaiv1.ImageResponse, index int) *Response {
 func (r *Response) Proto() *xaiv1.ImageResponse { return r.proto }
 
 func (r *Response) image() *xaiv1.GeneratedImage {
-	if r.proto == nil || r.index >= len(r.proto.Images) {
+	if r.proto == nil || r.index < 0 || r.index >= len(r.proto.Images) {
 		return nil
 	}
 	return r.proto.Images[r.index]
