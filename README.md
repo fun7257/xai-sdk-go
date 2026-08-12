@@ -51,6 +51,10 @@ go get github.com/fun7257/xai-sdk-go@v0.3.0
 
 </details>
 
+### This SDK vs the OpenAI-compatible REST API
+
+xAI's REST API is OpenAI-compatible: for the familiar OpenAI shape, point any OpenAI client (e.g. the official OpenAI Go SDK) at `base_url = https://api.x.ai/v1` — no extra library needed. Choose **this SDK** when you want the gRPC channel and the full feature surface: Collections management, deferred completions, server-side tools, storage options, and typed batch results. Mixing both in one codebase is fine.
+
 ---
 
 ## Quick start

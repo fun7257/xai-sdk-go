@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Docs
+
+- README (en/zh): guidance on choosing between this gRPC SDK and xAI's OpenAI-compatible REST API (`base_url = https://api.x.ai/v1` with any OpenAI client). An in-SDK OpenAI compatibility layer was evaluated and deliberately not built — the official REST path already covers that need.
+
 ## [0.3.0] — 2026-08-12
 
 Wire-alignment release: the vendored collections/files protos are now field-for-field identical to the official xAI API schema (#14), plus the remaining API-completeness gaps (#13) and automated release notes (#12).
