@@ -211,6 +211,37 @@ func (c *Client) List(ctx context.Context, opts ...ListOption) (*xaiv1.ListColle
 	return c.mgmt.ListCollections(ctx, req)
 }
 
+// ListAll returns all collections, following pagination tokens until the
+// final page. Options apply to every page request; a caller-provided
+// WithListPaginationToken sets the starting page only.
+func (c *Client) ListAll(ctx context.Context, opts ...ListOption) ([]*xaiv1.CollectionMetadata, error) {
+	if err := c.requireMgmt(); err != nil {
+		return nil, err
+	}
+	var out []*xaiv1.CollectionMetadata
+	token := ""
+	for {
+		req := &xaiv1.ListCollectionsRequest{}
+		for _, o := range opts {
+			o(req)
+		}
+		if token != "" {
+			req.PaginationToken = token
+		}
+		resp, err := c.mgmt.ListCollections(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, resp.GetCollections()...)
+		next := resp.GetPaginationToken()
+		// Stop on the final page or a non-advancing token (defensive).
+		if next == "" || next == token {
+			return out, nil
+		}
+		token = next
+	}
+}
+
 // Get returns collection metadata.
 func (c *Client) Get(ctx context.Context, collectionID string) (*xaiv1.CollectionMetadata, error) {
 	if err := c.requireMgmt(); err != nil {
@@ -434,6 +465,11 @@ func WithDocumentsLimit(n int32) ListDocumentsOption {
 	return func(r *xaiv1.ListDocumentsRequest) { r.Limit = n }
 }
 
+// WithDocumentsPaginationToken resumes listing from a prior page token.
+func WithDocumentsPaginationToken(t string) ListDocumentsOption {
+	return func(r *xaiv1.ListDocumentsRequest) { r.PaginationToken = t }
+}
+
 // ListDocuments lists documents in a collection.
 func (c *Client) ListDocuments(ctx context.Context, collectionID string, opts ...ListDocumentsOption) (*xaiv1.ListDocumentsResponse, error) {
 	if err := c.requireMgmt(); err != nil {
@@ -444,6 +480,37 @@ func (c *Client) ListDocuments(ctx context.Context, collectionID string, opts ..
 		o(req)
 	}
 	return c.mgmt.ListDocuments(ctx, req)
+}
+
+// ListAllDocuments returns all documents in a collection, following
+// pagination tokens until the final page. Options apply to every page
+// request; a caller-provided WithDocumentsPaginationToken sets the starting
+// page only.
+func (c *Client) ListAllDocuments(ctx context.Context, collectionID string, opts ...ListDocumentsOption) ([]*xaiv1.DocumentMetadata, error) {
+	if err := c.requireMgmt(); err != nil {
+		return nil, err
+	}
+	var out []*xaiv1.DocumentMetadata
+	token := ""
+	for {
+		req := &xaiv1.ListDocumentsRequest{CollectionId: collectionID}
+		for _, o := range opts {
+			o(req)
+		}
+		if token != "" {
+			req.PaginationToken = token
+		}
+		resp, err := c.mgmt.ListDocuments(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, resp.GetDocuments()...)
+		next := resp.GetPaginationToken()
+		if next == "" || next == token {
+			return out, nil
+		}
+		token = next
+	}
 }
 
 // BatchGetDocuments retrieves multiple documents by id.

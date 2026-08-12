@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added (API completeness batch)
+
+- **Auto-pagination helpers**: `files.ListAll`, `collections.ListAll`, `collections.ListAllDocuments`, and `batch.ListAll` follow pagination tokens until the final page (with a defensive stop on non-advancing tokens).
+- **collections.WithDocumentsPaginationToken**: resume `ListDocuments` from a prior page token (the proto field was previously unreachable via options).
+- **files.WithContentFormat**: request `original` (raw bytes, default) or `text` (server-extracted text) on `Content` / `ContentWriter`; unknown values error. Both methods now accept variadic `ContentOption`s (source-compatible).
+- **files filename validation**: `Upload` locally enforces the API filename contract (≤ `MaxFilenameChars` (255) Unicode chars; no control characters, line terminators, `"`, `;`, `\`) before streaming any data.
+- **types**: completed aspect-ratio constants (`Aspect2_3`, `Aspect3_2`, video `1:1`/`4:3`/`3:4`/`3:2`/`2:3`), image resolutions (`ImageRes1K`/`ImageRes2K`), and content formats (`ContentFormatOriginal`/`ContentFormatText`); a test locks constants to their validators.
+
 ### Fixed (low-severity audit batch)
 
 - **chat.Parse**: session `ResponseFormat` restore now uses `defer`, so a panicking Sample cannot leave the session mutated; **chat.Compact** surfaces `Append` errors instead of discarding them.

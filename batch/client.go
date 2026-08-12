@@ -53,6 +53,25 @@ func (c *Client) List(ctx context.Context, paginationToken string) (*xaiv1.ListB
 	return c.stub.ListBatches(ctx, req)
 }
 
+// ListAll returns all batches, following pagination tokens until the final page.
+func (c *Client) ListAll(ctx context.Context) ([]*xaiv1.Batch, error) {
+	var out []*xaiv1.Batch
+	token := ""
+	for {
+		resp, err := c.List(ctx, token)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, resp.GetBatches()...)
+		next := resp.GetPaginationToken()
+		// Stop on the final page or a non-advancing token (defensive).
+		if next == "" || next == token {
+			return out, nil
+		}
+		token = next
+	}
+}
+
 // ListBatchRequests lists request metadata for a batch.
 func (c *Client) ListBatchRequests(ctx context.Context, batchID, paginationToken string) (*xaiv1.ListBatchRequestMetadataResponse, error) {
 	req := &xaiv1.ListBatchRequestMetadataRequest{BatchId: batchID}
