@@ -68,14 +68,17 @@ func (c *Client) Create(ctx context.Context, name string, opts ...CreateOption) 
 	if err != nil {
 		return nil, err
 	}
-	return c.mgmt.CreateCollection(ctx, &xaiv1.CreateCollectionRequest{
-		CollectionName:        name,
-		CollectionDescription: cfg.description,
-		IndexConfiguration:    cfg.index,
-		ChunkConfiguration:    cfg.chunk,
-		MetricSpace:           metric,
-		FieldDefinitions:      cfg.fields,
-	})
+	req := &xaiv1.CreateCollectionRequest{
+		CollectionName:     name,
+		IndexConfiguration: cfg.index,
+		ChunkConfiguration: cfg.chunk,
+		MetricSpace:        metric,
+		FieldDefinitions:   cfg.fields,
+	}
+	if cfg.description != "" {
+		req.CollectionDescription = &cfg.description
+	}
+	return c.mgmt.CreateCollection(ctx, req)
 }
 
 // CreateOption configures Create.
@@ -111,20 +114,22 @@ func WithMetric(m string) CreateOption {
 	}
 }
 
-func hnswMetric(s string, set bool) (xaiv1.HNSWMetric, error) {
+func hnswMetric(s string, set bool) (*xaiv1.HNSWMetric, error) {
 	if !set {
-		return xaiv1.HNSWMetric_HNSW_METRIC_UNKNOWN, nil
+		return nil, nil
 	}
+	var m xaiv1.HNSWMetric
 	switch s {
 	case "", "cosine":
-		return xaiv1.HNSWMetric_HNSW_METRIC_COSINE, nil
+		m = xaiv1.HNSWMetric_HNSW_METRIC_COSINE
 	case "euclidean":
-		return xaiv1.HNSWMetric_HNSW_METRIC_EUCLIDEAN, nil
+		m = xaiv1.HNSWMetric_HNSW_METRIC_EUCLIDEAN
 	case "inner_product":
-		return xaiv1.HNSWMetric_HNSW_METRIC_INNER_PRODUCT, nil
+		m = xaiv1.HNSWMetric_HNSW_METRIC_INNER_PRODUCT
 	default:
-		return 0, fmt.Errorf("collections: unknown metric %q (want cosine, euclidean, or inner_product)", s)
+		return nil, fmt.Errorf("collections: unknown metric %q (want cosine, euclidean, or inner_product)", s)
 	}
+	return &m, nil
 }
 
 // WithFieldDefinitions sets initial field definitions.
@@ -146,10 +151,13 @@ func WithInjectNameIntoChunks(v bool) ChunkOption {
 }
 
 // ChunkByChars builds a character-based chunk configuration.
+// overlap chars default to 0; use WithChunkOverlap to set them.
 // The result always passes ValidateChunkConfiguration.
 func ChunkByChars(maxChunkSizeChars int32, opts ...ChunkOption) *xaiv1.ChunkConfiguration {
 	c := &xaiv1.ChunkConfiguration{
-		CharsConfiguration: &xaiv1.CharsConfiguration{MaxChunkSizeChars: maxChunkSizeChars},
+		Config: &xaiv1.ChunkConfiguration_CharsConfiguration{
+			CharsConfiguration: &xaiv1.CharsConfiguration{MaxChunkSizeChars: maxChunkSizeChars},
+		},
 	}
 	for _, o := range opts {
 		o(c)
@@ -161,7 +169,9 @@ func ChunkByChars(maxChunkSizeChars int32, opts ...ChunkOption) *xaiv1.ChunkConf
 // The result always passes ValidateChunkConfiguration.
 func ChunkByTokens(maxChunkSizeTokens int32, opts ...ChunkOption) *xaiv1.ChunkConfiguration {
 	c := &xaiv1.ChunkConfiguration{
-		TokensConfiguration: &xaiv1.TokensConfiguration{MaxChunkSizeTokens: maxChunkSizeTokens},
+		Config: &xaiv1.ChunkConfiguration_TokensConfiguration{
+			TokensConfiguration: &xaiv1.TokensConfiguration{MaxChunkSizeTokens: maxChunkSizeTokens},
+		},
 	}
 	for _, o := range opts {
 		o(c)
@@ -173,7 +183,9 @@ func ChunkByTokens(maxChunkSizeTokens int32, opts ...ChunkOption) *xaiv1.ChunkCo
 // The result always passes ValidateChunkConfiguration.
 func ChunkByBytes(maxChunkSizeBytes int32, opts ...ChunkOption) *xaiv1.ChunkConfiguration {
 	c := &xaiv1.ChunkConfiguration{
-		BytesConfiguration: &xaiv1.BytesConfiguration{MaxChunkSizeBytes: maxChunkSizeBytes},
+		Config: &xaiv1.ChunkConfiguration_BytesConfiguration{
+			BytesConfiguration: &xaiv1.BytesConfiguration{MaxChunkSizeBytes: maxChunkSizeBytes},
+		},
 	}
 	for _, o := range opts {
 		o(c)
@@ -181,27 +193,41 @@ func ChunkByBytes(maxChunkSizeBytes int32, opts ...ChunkOption) *xaiv1.ChunkConf
 	return c
 }
 
-// ValidateChunkConfiguration requires exactly one of chars/tokens/bytes when cfg is non-nil.
-// When cfg is nil, returns nil.
+// WithChunkOverlap sets the chunk overlap for whichever chunking mode is
+// active (chars, tokens, or bytes). A no-op when no mode is set yet, so pass
+// it after/with ChunkBy*.
+func WithChunkOverlap(n int32) ChunkOption {
+	return func(c *xaiv1.ChunkConfiguration) {
+		switch cfg := c.GetConfig().(type) {
+		case *xaiv1.ChunkConfiguration_CharsConfiguration:
+			cfg.CharsConfiguration.ChunkOverlapChars = n
+		case *xaiv1.ChunkConfiguration_TokensConfiguration:
+			cfg.TokensConfiguration.ChunkOverlapTokens = n
+		case *xaiv1.ChunkConfiguration_BytesConfiguration:
+			cfg.BytesConfiguration.ChunkOverlapBytes = n
+		}
+	}
+}
+
+// WithTokensEncodingName sets the tokenizer encoding for token-based chunking.
+// A no-op for chars/bytes modes.
+func WithTokensEncodingName(name string) ChunkOption {
+	return func(c *xaiv1.ChunkConfiguration) {
+		if cfg, ok := c.GetConfig().(*xaiv1.ChunkConfiguration_TokensConfiguration); ok {
+			cfg.TokensConfiguration.EncodingName = name
+		}
+	}
+}
+
+// ValidateChunkConfiguration requires a chunking strategy (chars/tokens/bytes)
+// when cfg is non-nil. The strategies are a proto oneof, so at most one can be
+// set; this catches the zero-value "none set" case. When cfg is nil, returns nil.
 func ValidateChunkConfiguration(cfg *xaiv1.ChunkConfiguration) error {
 	if cfg == nil {
 		return nil
 	}
-	n := 0
-	if cfg.CharsConfiguration != nil {
-		n++
-	}
-	if cfg.TokensConfiguration != nil {
-		n++
-	}
-	if cfg.BytesConfiguration != nil {
-		n++
-	}
-	if n == 0 {
+	if cfg.GetConfig() == nil {
 		return fmt.Errorf("chunk configuration requires exactly one of chars, tokens, or bytes configuration")
-	}
-	if n > 1 {
-		return fmt.Errorf("chunk configuration allows only one of chars, tokens, or bytes configuration")
 	}
 	return nil
 }
@@ -337,7 +363,7 @@ func (c *Client) GenerateDescription(ctx context.Context, collectionID string) (
 	if err != nil {
 		return "", err
 	}
-	return r.Description, nil
+	return r.CollectionDescription, nil
 }
 
 // AddExistingDocument adds an already-uploaded file to a collection.

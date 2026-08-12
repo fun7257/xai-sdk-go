@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/fun7257/xai-sdk-go/files"
 	"github.com/fun7257/xai-sdk-go/internal/testutil"
@@ -46,8 +47,8 @@ func (m *mockFiles) DeleteFile(ctx context.Context, req *xaiv1.DeleteFileRequest
 func (m *mockFiles) CreatePublicUrl(ctx context.Context, req *xaiv1.CreatePublicUrlRequest) (*xaiv1.CreatePublicUrlResponse, error) {
 	m.lastPub = req
 	return &xaiv1.CreatePublicUrlResponse{
-		FileId:    req.GetFileId(),
 		PublicUrl: "https://public.example/" + req.GetFileId(),
+		ExpiresAt: timestamppb.New(time.Now().Add(time.Hour)),
 	}, nil
 }
 

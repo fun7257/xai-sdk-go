@@ -282,12 +282,17 @@ func (x *BytesConfiguration) GetChunkOverlapBytes() int32 {
 }
 
 type ChunkConfiguration struct {
-	state                protoimpl.MessageState `protogen:"open.v1"`
-	CharsConfiguration   *CharsConfiguration    `protobuf:"bytes,1,opt,name=chars_configuration,json=charsConfiguration,proto3" json:"chars_configuration,omitempty"`
-	TokensConfiguration  *TokensConfiguration   `protobuf:"bytes,2,opt,name=tokens_configuration,json=tokensConfiguration,proto3" json:"tokens_configuration,omitempty"`
-	BytesConfiguration   *BytesConfiguration    `protobuf:"bytes,3,opt,name=bytes_configuration,json=bytesConfiguration,proto3" json:"bytes_configuration,omitempty"`
-	StripWhitespace      bool                   `protobuf:"varint,4,opt,name=strip_whitespace,json=stripWhitespace,proto3" json:"strip_whitespace,omitempty"`
-	InjectNameIntoChunks bool                   `protobuf:"varint,5,opt,name=inject_name_into_chunks,json=injectNameIntoChunks,proto3" json:"inject_name_into_chunks,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Exactly one chunking strategy (enforced by oneof, matching upstream).
+	//
+	// Types that are valid to be assigned to Config:
+	//
+	//	*ChunkConfiguration_CharsConfiguration
+	//	*ChunkConfiguration_TokensConfiguration
+	//	*ChunkConfiguration_BytesConfiguration
+	Config               isChunkConfiguration_Config `protobuf_oneof:"config"`
+	StripWhitespace      bool                        `protobuf:"varint,3,opt,name=strip_whitespace,json=stripWhitespace,proto3" json:"strip_whitespace,omitempty"`
+	InjectNameIntoChunks bool                        `protobuf:"varint,4,opt,name=inject_name_into_chunks,json=injectNameIntoChunks,proto3" json:"inject_name_into_chunks,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -322,23 +327,36 @@ func (*ChunkConfiguration) Descriptor() ([]byte, []int) {
 	return file_xai_api_v1_types_proto_rawDescGZIP(), []int{4}
 }
 
+func (x *ChunkConfiguration) GetConfig() isChunkConfiguration_Config {
+	if x != nil {
+		return x.Config
+	}
+	return nil
+}
+
 func (x *ChunkConfiguration) GetCharsConfiguration() *CharsConfiguration {
 	if x != nil {
-		return x.CharsConfiguration
+		if x, ok := x.Config.(*ChunkConfiguration_CharsConfiguration); ok {
+			return x.CharsConfiguration
+		}
 	}
 	return nil
 }
 
 func (x *ChunkConfiguration) GetTokensConfiguration() *TokensConfiguration {
 	if x != nil {
-		return x.TokensConfiguration
+		if x, ok := x.Config.(*ChunkConfiguration_TokensConfiguration); ok {
+			return x.TokensConfiguration
+		}
 	}
 	return nil
 }
 
 func (x *ChunkConfiguration) GetBytesConfiguration() *BytesConfiguration {
 	if x != nil {
-		return x.BytesConfiguration
+		if x, ok := x.Config.(*ChunkConfiguration_BytesConfiguration); ok {
+			return x.BytesConfiguration
+		}
 	}
 	return nil
 }
@@ -357,6 +375,28 @@ func (x *ChunkConfiguration) GetInjectNameIntoChunks() bool {
 	return false
 }
 
+type isChunkConfiguration_Config interface {
+	isChunkConfiguration_Config()
+}
+
+type ChunkConfiguration_CharsConfiguration struct {
+	CharsConfiguration *CharsConfiguration `protobuf:"bytes,1,opt,name=chars_configuration,json=charsConfiguration,proto3,oneof"`
+}
+
+type ChunkConfiguration_TokensConfiguration struct {
+	TokensConfiguration *TokensConfiguration `protobuf:"bytes,2,opt,name=tokens_configuration,json=tokensConfiguration,proto3,oneof"`
+}
+
+type ChunkConfiguration_BytesConfiguration struct {
+	BytesConfiguration *BytesConfiguration `protobuf:"bytes,11,opt,name=bytes_configuration,json=bytesConfiguration,proto3,oneof"`
+}
+
+func (*ChunkConfiguration_CharsConfiguration) isChunkConfiguration_Config() {}
+
+func (*ChunkConfiguration_TokensConfiguration) isChunkConfiguration_Config() {}
+
+func (*ChunkConfiguration_BytesConfiguration) isChunkConfiguration_Config() {}
+
 var File_xai_api_v1_types_proto protoreflect.FileDescriptor
 
 const file_xai_api_v1_types_proto_rawDesc = "" +
@@ -374,13 +414,14 @@ const file_xai_api_v1_types_proto_rawDesc = "" +
 	"\rencoding_name\x18\x03 \x01(\tR\fencodingName\"u\n" +
 	"\x12BytesConfiguration\x12/\n" +
 	"\x14max_chunk_size_bytes\x18\x01 \x01(\x05R\x11maxChunkSizeBytes\x12.\n" +
-	"\x13chunk_overlap_bytes\x18\x02 \x01(\x05R\x11chunkOverlapBytes\"\xe3\x02\n" +
-	"\x12ChunkConfiguration\x12L\n" +
-	"\x13chars_configuration\x18\x01 \x01(\v2\x1b.xai_api.CharsConfigurationR\x12charsConfiguration\x12O\n" +
-	"\x14tokens_configuration\x18\x02 \x01(\v2\x1c.xai_api.TokensConfigurationR\x13tokensConfiguration\x12L\n" +
-	"\x13bytes_configuration\x18\x03 \x01(\v2\x1b.xai_api.BytesConfigurationR\x12bytesConfiguration\x12)\n" +
-	"\x10strip_whitespace\x18\x04 \x01(\bR\x0fstripWhitespace\x125\n" +
-	"\x17inject_name_into_chunks\x18\x05 \x01(\bR\x14injectNameIntoChunks*w\n" +
+	"\x13chunk_overlap_bytes\x18\x02 \x01(\x05R\x11chunkOverlapBytes\"\xf3\x02\n" +
+	"\x12ChunkConfiguration\x12N\n" +
+	"\x13chars_configuration\x18\x01 \x01(\v2\x1b.xai_api.CharsConfigurationH\x00R\x12charsConfiguration\x12Q\n" +
+	"\x14tokens_configuration\x18\x02 \x01(\v2\x1c.xai_api.TokensConfigurationH\x00R\x13tokensConfiguration\x12N\n" +
+	"\x13bytes_configuration\x18\v \x01(\v2\x1b.xai_api.BytesConfigurationH\x00R\x12bytesConfiguration\x12)\n" +
+	"\x10strip_whitespace\x18\x03 \x01(\bR\x0fstripWhitespace\x125\n" +
+	"\x17inject_name_into_chunks\x18\x04 \x01(\bR\x14injectNameIntoChunksB\b\n" +
+	"\x06config*w\n" +
 	"\n" +
 	"HNSWMetric\x12\x17\n" +
 	"\x13HNSW_METRIC_UNKNOWN\x10\x00\x12\x16\n" +
@@ -425,6 +466,11 @@ func init() { file_xai_api_v1_types_proto_init() }
 func file_xai_api_v1_types_proto_init() {
 	if File_xai_api_v1_types_proto != nil {
 		return
+	}
+	file_xai_api_v1_types_proto_msgTypes[4].OneofWrappers = []any{
+		(*ChunkConfiguration_CharsConfiguration)(nil),
+		(*ChunkConfiguration_TokensConfiguration)(nil),
+		(*ChunkConfiguration_BytesConfiguration)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
