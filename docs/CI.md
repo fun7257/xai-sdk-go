@@ -6,7 +6,7 @@ How GitHub Actions run for this **library module** (no binary release artifacts)
 
 | Workflow | File | Purpose |
 |----------|------|---------|
-| **ci** | [`.github/workflows/ci.yaml`](../.github/workflows/ci.yaml) | Offline gates: vet, test + coverage profile (uploaded artifact), race (scoped), examples, lint, govulncheck |
+| **ci** | [`.github/workflows/ci.yaml`](../.github/workflows/ci.yaml) | Offline gates: vet, test + coverage profile (uploaded artifact), race (scoped), examples, lint, govulncheck. Go **1.26.6+** (`check-latest`) so the stdlib scan matches the current security patch. |
 | **integration** | [`.github/workflows/integration.yml`](../.github/workflows/integration.yml) | Optional live API smoke (`//go:build integration`) |
 | **release** | [`.github/workflows/release.yml`](../.github/workflows/release.yml) | On `v*` tags: publish GitHub Release notes from the matching `CHANGELOG.md` section; manual dispatch backfills existing tags |
 
