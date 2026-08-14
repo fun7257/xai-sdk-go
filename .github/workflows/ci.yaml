@@ -38,7 +38,11 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.26"
+          # Patch floor: govulncheck scans the runner stdlib. 1.26.5 fails
+          # GO-2026-6218 / 6090 / 5972 / 5026; fixed in 1.26.6 (2026-08-13).
+          # check-latest picks up later 1.26.x security patches on the daily cron.
+          go-version: "1.26.6"
+          check-latest: true
           cache: true
 
       - name: Vet

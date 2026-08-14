@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Go **1.26+**
+- Go **1.26.6+** (`go.mod` `toolchain go1.26.6`; older 1.26.x auto-downloads with `GOTOOLCHAIN=auto`)
 - Optional: `protoc`, `protoc-gen-go`, `protoc-gen-go-grpc` (proto regen only)
 - Optional: `golangci-lint` v2.x (`make lint` can `go run` a pin)
 

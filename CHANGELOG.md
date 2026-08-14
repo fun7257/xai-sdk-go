@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- CI: install Go **1.26.6+** (`check-latest: true`) so daily `govulncheck` uses the stdlib security patch (GO-2026-6218 / 6090 / 5972 / 5026). `go.mod` now has `toolchain go1.26.6`.
+
 ### Docs
 
 - README (en/zh): guidance on choosing between this gRPC SDK and xAI's OpenAI-compatible REST API (`base_url = https://api.x.ai/v1` with any OpenAI client). An in-SDK OpenAI compatibility layer was evaluated and deliberately not built — the official REST path already covers that need.

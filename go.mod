@@ -2,6 +2,9 @@ module github.com/fun7257/xai-sdk-go
 
 go 1.26
 
+// Patched stdlib (govulncheck): GO-2026-6218 / 6090 / 5972 / 5026.
+toolchain go1.26.6
+
 require (
 	go.opentelemetry.io/otel v1.45.0
 	go.opentelemetry.io/otel/sdk v1.45.0
