@@ -320,8 +320,9 @@ Search 选项：`WithSearchLimit` / `WithSearchInstructions` / `WithRetrievalMod
 | 视频 | `ModelImagineVideo`, `ModelImagineVideo15`, `ModelImagineVideo15Preview` |
 | 推理 | `ReasoningNone/Low/Medium/High` |
 | 档位 | `ServiceTierDefault`, `ServiceTierPriority` |
-| 图格式/比例 | `ImageFormatURL/Base64`, `Aspect1_1`, `Aspect16_9`, … |
-| 视频 | `VideoAspect16_9`, `VideoRes480p`, `VideoRes720p` |
+| 图格式/比例/分辨率 | `ImageFormatURL/Base64`, `Aspect1_1`, `Aspect16_9`, `Aspect2_3`, `Aspect3_2`, … · `ImageRes1K` / `ImageRes2K` |
+| 视频 | `VideoAspect16_9`, `VideoAspect1_1`, `VideoRes480p`, `VideoRes720p` |
+| 文件内容格式 | `ContentFormatOriginal` / `ContentFormatText` |
 | 工具/搜索 | `ToolModeAuto/None/Required`, `SearchModeAuto/On/Off` |
 | 图像细节 | `ImageDetailAuto/Low/High` |
 
@@ -331,11 +332,12 @@ Search 选项：`WithSearchLimit` / `WithSearchInstructions` / `WithRetrievalMod
 
 ```text
 NewClient → Chat.Create(model, WithMessages(...))
-         → Sample / Samples(WithN) / StreamReader / Parse / Defer
+         → Sample / Samples(WithN) / StreamReader / Parse
+         → Defer | DeferStart + DeferGet
 
 NewClient → Image.Sample | Video.Generate
-NewClient → Files.Upload | ContentWriter
-NewClient → tools.WebSearch → Chat.WithTools
+NewClient → Files.Upload | ListAll | ContentWriter
+NewClient → tools.WebSearch / AttachmentSearch → Chat.WithTools
 ```
 
 更完整参数与中英示例：[`GUIDE.zh-en.md`](GUIDE.zh-en.md) · [`examples/complete`](../examples/complete)。

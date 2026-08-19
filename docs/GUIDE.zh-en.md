@@ -4,6 +4,7 @@
 **中文** 本模块的参数说明与调用形态参考。
 
 Landing / 入口: [`../README.md`](../README.md) · **API 全量符号**: [`API.md`](API.md) · Design: [`PARITY.md`](PARITY.md) · Diffs: [`DIFF.md`](DIFF.md)
+
 | | EN | 中文 |
 |--|----|------|
 | Runnable example | [`examples/complete/`](../examples/complete/) | 可运行完整示例 |
@@ -15,7 +16,7 @@ Landing / 入口: [`../README.md`](../README.md) · **API 全量符号**: [`API.
 ## 1. Install / 安装
 
 ```bash
-go get github.com/fun7257/xai-sdk-go   # Go 1.26+
+go get github.com/fun7257/xai-sdk-go@v0.3.0   # Go 1.26+
 ```
 
 Quick start also on the [root README](../README.md).
@@ -99,7 +100,8 @@ client, err := xai.NewClient(
 | Multiple / 多次补全 | `Samples(ctx, chat.WithN(k))` | Returns all / 返回全部结果 |
 | Streaming / 流式 | `StreamReader(ctx)` + `Recv` / `Close` | Primary stream DX / 主流式 API |
 | Structured JSON / 结构化 | `Parse(ctx, schema, &dest)` | Unmarshals into dest / 反序列化到目标 |
-| Deferred / 延迟 | `Defer` / `Defers(..., WithDeferN)` | Poll until done / 轮询至完成 |
+| Deferred (poll) / 延迟（内部轮询） | `Defer` / `Defers(..., WithDeferN)` | Poll until done / 轮询至完成 |
+| Deferred (split) / 延迟（拆分） | `DeferStart` / `DeferGet` | Submit → `request_id` → poll on your schedule / 提交后自主轮询（可跨进程） |
 
 ### Session create options / 会话创建选项
 
@@ -131,7 +133,7 @@ Used in `client.Chat.Create(model, opts...)`.
 | `WithPreviousResponseID(id)` | `string` | Continue from stored id | 从已存响应续写 |
 | `WithUseEncryptedContent(v)` | `bool` | Encrypted content path | 加密内容路径 |
 | `WithMaxTurns(n)` | `int32` | Max agentic turns | 最大代理轮次 |
-| `WithInclude(opts...)` | string names | Extra include flags (e.g. `inline_citations`) | 额外 include 标志 |
+| `WithInclude(opts...)` | string names | Extra include flags (e.g. `inline_citations`, `attachment_search_call_output`) | 额外 include 标志 |
 | `WithAgentCount(n)` | `4` or `16` | Parallel agents | 并行代理数 |
 | `WithServiceTier(tier)` | `default\|priority` | Service tier | 服务档位 |
 | `WithConversationID(id)` | `string` | **Client-side** correlation only | **仅客户端**会话关联 ID |
@@ -142,6 +144,9 @@ Used in `client.Chat.Create(model, opts...)`.
 | Option | Parameter | Description EN | 说明 中文 |
 |--------|-----------|----------------|-----------|
 | `chat.WithN(n)` | `int32` ≥ 1 | Number of completions for `Samples` / stream multi-index | `Samples` 或多路流的补全数量 |
+| `chat.WithDeferN(n)` | `int32` ≥ 1 | Completions for `Defers` | `Defers` 的补全数量 |
+| `chat.WithDeferTimeout(d)` | `time.Duration` | Poll deadline for `Defer` / `Defers` | `Defer` / `Defers` 轮询截止 |
+| `chat.WithDeferInterval(d)` | `time.Duration` | Poll interval | 轮询间隔 |
 
 ### Message factories / 消息工厂
 
@@ -152,6 +157,7 @@ Used in `client.Chat.Create(model, opts...)`.
 | `chat.Assistant(parts...)` | Yes | `chat.NewAssistant` | Assistant / 助手 |
 | `chat.Developer(parts...)` | Yes | `chat.NewDeveloper` | Developer / 开发者 |
 | `chat.ToolResult(text, callID)` | No | — | Tool result / 工具结果 |
+| `chat.Named(msg, name)` | No | — | Set participant `Message.name` / 设置参与者名称 |
 | `chat.Text(s)` | No | — | Text content part / 文本 part |
 | `chat.Image(url, detail)` | No | — | Image URL; detail `auto\|low\|high` |
 | `chat.FileByID` / `FileByData` / `FileByURL` | No | — | File attachments / 文件附件 |
@@ -165,7 +171,9 @@ Used in `client.Chat.Create(model, opts...)`.
 |--------|----|------|
 | `Content()` | Assistant text | 助手文本 |
 | `ReasoningContent()` | Reasoning trace | 推理内容 |
-| `ToolCalls()` | Tool calls for index | 工具调用 |
+| `EncryptedContent()` | Encrypted reasoning path | 加密推理内容 |
+| `ToolCalls()` / `ToolOutputs()` | Tool calls / outputs for index | 工具调用 / 工具输出 |
+| `Citations()` / `InlineCitations()` | Search citations | 检索引用 |
 | `Usage()` / `CostUSD()` | Token usage / cost | 用量 / 费用 |
 | `Proto()` | Escape hatch to protobuf | 底层 protobuf |
 
@@ -178,34 +186,42 @@ Used in `client.Chat.Create(model, opts...)`.
 | `tools.WebSearch(opts...)` | Yes → `error` | Web search tool | 网页搜索 |
 | `tools.UncheckedWebSearch` | No | Escape hatch | 跳过校验 |
 | `tools.XSearch(opts...)` | Yes | X (Twitter) search | X 搜索 |
+| `tools.UncheckedXSearch` | No | Escape hatch | 跳过校验 |
 | `tools.CodeExecution()` | — | Code execution | 代码执行 |
 | `tools.Function(name, desc, params)` | marshal | Client function tool | 客户端函数工具 |
 | `tools.CollectionsSearchOpts(...)` | mode | RAG collections tool | 集合检索工具 |
+| `tools.AttachmentSearch(limit)` | — | Attachment search (pair with `WithInclude("attachment_search_call_output")`) | 附件检索 |
 | `tools.MCP(url, opts...)` | — | Remote MCP | 远程 MCP |
 
 WebSearch options examples / 示例：  
 `WithAllowedDomains` · `WithExcludedDomains` (mutually exclusive / **互斥**) · `WithUserLocation` · `WithImageSearch`
 
+Full symbol catalogue / 全量符号：[`API.md`](API.md) §4.
+
 ---
 
-## 6. Image / Video (brief) / 图像与视频（简）
+## 6. Other domains (brief) / 其他域（简）
+
+Parameter detail and full symbols: [`API.md`](API.md). Constants: `types` (`Aspect*`, `ImageRes1K`/`2K`, `ContentFormatOriginal`/`Text`, …).
 
 **Image / 图像**
 
 ```go
-img, err := client.Image.Sample(ctx, "a cat", "grok-imagine-image")
+img, err := client.Image.Sample(ctx, "a cat", types.ModelImagineImage)
 // multi: client.Image.Samples(ctx, prompt, model, image.WithN(2))
 url, err := img.URL()
 ```
 
-Common options: `WithN`, aspect ratio, resolution, image URL / file_id references (see package godoc).  
-常用：`WithN`、宽高比、分辨率、参考图 URL / file_id（见包文档）。
+Common options: `WithN`, `WithAspectRatio`, `WithResolution` (`types.ImageRes1K`/`ImageRes2K`), image URL / file_id references.  
+常用：`WithN`、宽高比、分辨率、参考图 URL / file_id。
 
-**Video / 视频**
+**Video / 视频** — `Generate` (poll) or `Start`/`Get`; extend: `Extend` / `ExtendStart` then `Get`. See [`examples/video`](../examples/video/).
 
-```go
-// Generate + poll pattern — see examples/video
-```
+**Files / 文件** — `Upload` / `List` / `ListAll` / `Content` / `ContentWriter`. Download format: `files.WithContentFormat` (`types.ContentFormatOriginal` / `ContentFormatText`).
+
+**Batch / 批处理** — `Create` / `Add` / `List` / `ListAll` + typed `batch.Result`.
+
+**Collections / 集合** — CRUD needs management key. Auto-page: `ListAll` / `ListAllDocuments`. Chunk constructors: `ChunkByChars` / `ChunkByTokens` / `ChunkByBytes` (+ `WithStripWhitespace` / `WithInjectNameIntoChunks` / `WithChunkOverlap`).
 
 ---
 

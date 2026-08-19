@@ -25,12 +25,12 @@ It is **not** a Python API clone: keep service capability, choose Go-native shap
 | Chat one-shot | `Sample(ctx)` → `*Response` |
 | Chat multi | `Samples(ctx, chat.WithN(k))` → `[]*Response` |
 | Chat stream | `StreamReader(ctx, chat.WithN(k)?)` + `Recv` / `Close` |
-| Chat deferred | `Defer(ctx)` or `Defers(ctx, chat.WithDeferN(k))` |
+| Chat deferred | `Defer(ctx)` / `Defers(..., WithDeferN)` (poll) or `DeferStart` then `DeferGet` (split) |
 | Chat structured | `Parse(ctx, schemaJSON, &dest)` |
 | Image one-shot / multi | `Sample(...)` / `Samples(..., image.WithN(k))` |
-| Tools | `tools.WebSearch` / `XSearch` → `(*Tool, error)`; escape: `Unchecked*` |
+| Tools | `tools.WebSearch` / `XSearch` / `AttachmentSearch` → validate on primary; escape: `Unchecked*` |
 | Search sources | `search.WebSource` / `NewsSource` → `(*Source, error)` |
-| Files large download | `ContentWriter(ctx, id, w)` |
+| Files list / download | `ListAll`; large body: `ContentWriter(ctx, id, w)` |
 | Video extend async | `ExtendStart` then `Get` |
 
 ## Out of scope

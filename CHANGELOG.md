@@ -8,6 +8,7 @@
 
 ### Docs
 
+- Sync GUIDE / PARITY / DIFF / README / API types with the 0.2–0.3 public surface (`DeferStart`/`DeferGet`, `Named`, `AttachmentSearch`, `ListAll`, `WithContentFormat`, chunk constructors). A docs test now fails if those symbols drop out of the consumer guides.
 - README (en/zh): guidance on choosing between this gRPC SDK and xAI's OpenAI-compatible REST API (`base_url = https://api.x.ai/v1` with any OpenAI client). An in-SDK OpenAI compatibility layer was evaluated and deliberately not built — the official REST path already covers that need.
 
 ## [0.3.0] — 2026-08-12
