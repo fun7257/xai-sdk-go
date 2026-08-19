@@ -38,10 +38,10 @@ Design principles are maintained in **[`PARITY.md`](PARITY.md)** (call-site firs
 | `chat.sample_batch(n)` | `chat.Samples(ctx, chat.WithN(n))` |
 | `chat.stream()` / iterate | `StreamReader` + `Recv` / `Close` (or `Stream` channels) |
 | `chat.stream_batch(n)` | `StreamReader(ctx, chat.WithN(n))` |
-| `chat.defer()` / `defer_batch` | `Defer` / `Defers(..., chat.WithDeferN(n))` |
+| `chat.defer()` / `defer_batch` | `Defer` / `Defers(..., chat.WithDeferN(n))` or `DeferStart` / `DeferGet` |
 | `chat.parse(PydanticModel)` | `Parse(ctx, schemaJSON, &dest)` |
-| `user()` / `system()` / `image()` / `file()` | `chat.User` / `System` / `Image` / `File` / `FileByID`… |
-| `web_search()` / `x_search()` | `tools.WebSearch` / `XSearch` → `(*Tool, error)` |
+| `user()` / `system()` / `image()` / `file()` | `chat.User` / `System` / `Image` / `File` / `FileByID`… · `Named(msg, name)` |
+| `web_search()` / `x_search()` / attachment search | `tools.WebSearch` / `XSearch` / `AttachmentSearch` |
 | `SearchParameters` + sources | `search.Parameters` + `WebSource` / `XSource`… |
 | `client.image.sample` / batch | `Image.Sample` / `Image.Samples` + `WithN` |
 | `client.video.generate` / `extend` / start | `Video.Generate` / `Extend` / `ExtendStart` + `Get` |
@@ -97,7 +97,7 @@ Design principles are maintained in **[`PARITY.md`](PARITY.md)** (call-site firs
 | Sample n>1 | `Samples(ctx, WithN(k))` |
 | Stream | `StreamReader` (primary), `Stream` (channels) |
 | Stream multi | `StreamReader(ctx, WithN(k))` → `Responses()` after EOF |
-| Deferred | `Defer` (n=1) / `Defers` + `WithDeferN` |
+| Deferred | `Defer` (n=1) / `Defers` + `WithDeferN`; split `DeferStart` / `DeferGet` |
 | Structured output | `Parse(ctx, schemaJSON, dest)` or create-time `WithResponseFormatJSONSchema` |
 | Stored completion | client `GetStoredCompletion` / `DeleteStoredCompletion` |
 | Compact | `Compact` / client `CompactContext` |
@@ -123,10 +123,14 @@ for {
     // ev.Chunk / ev.Response
 }
 
-// Deferred
+// Deferred (SDK polls)
 resp, err := session.Defer(ctx)
 // multi deferred:
 resps, err := session.Defers(ctx, chat.WithDeferN(2), chat.WithDeferTimeout(10*time.Minute))
+
+// Deferred split (caller polls; resumable)
+id, err := session.DeferStart(ctx)
+status, resps, err := session.DeferGet(ctx, id)
 ```
 
 ### Intentional differences
@@ -156,6 +160,7 @@ resps, err := session.Defers(ctx, chat.WithDeferN(2), chat.WithDeferTimeout(10*t
 | Python | Go |
 |--------|-----|
 | `user(...)` / `system(...)` / … | `chat.User` / `System` / `Assistant` / `Developer` (panic on bad part type) + `NewUser`… returning error |
+| message `name` | `chat.Named(msg, name)` |
 | `text` / `image` / `file` overloads | `Text`, `Image(url, detail)`, `FileByID` / `FileByData` / `FileByURL`, or unified `File(...)` with exactly-one-mode validation |
 | Image detail auto/low/high | same string details |
 
@@ -178,6 +183,7 @@ resps, err := session.Defers(ctx, chat.WithDeferN(2), chat.WithDeferTimeout(10*t
 | X search | `XSearch(opts...) (*Tool, error)` |
 | Code execution | `CodeExecution()` |
 | Collections search | `CollectionsSearch` / `CollectionsSearchOpts` |
+| Attachment search | `AttachmentSearch(limit)` |
 | MCP | `MCP(url, opts...)` |
 | Call type helper | `CallType(tc)` |
 
@@ -289,8 +295,9 @@ imgs, err := client.Image.Samples(ctx, "a cat", model, image.WithN(2))
 | Progress | `WithProgress(func(delta, total int64))` |
 | Expires | `WithExpiresAfter` |
 | List filter/sort/order/limit/page | list options |
+| Auto-pagination | `ListAll` |
 | Get / Delete | yes |
-| Content full buffer | `Content` (max `MaxContentBytes`) |
+| Content full buffer | `Content` (max `MaxContentBytes`); `WithContentFormat` (`original` / `text`) |
 | Content stream | `ContentWriter(ctx, id, io.Writer)` |
 | Public URL create/revoke | yes |
 | Batch upload paths | `BatchUpload` / `BatchUploadWithOptions` |
@@ -312,7 +319,7 @@ imgs, err := client.Image.Samples(ctx, "a cat", model, image.WithN(2))
 
 | Feature | Go |
 |---------|-----|
-| Create / Add / Get / Cancel / List | yes |
+| Create / Add / Get / Cancel / List / `ListAll` | yes |
 | List requests / results + pagination | yes |
 | Get single request result | `GetBatchRequestResult` |
 | Typed success/failure | `batch.Result` (`Succeeded`/`Failed`/`Error`) |
@@ -336,10 +343,10 @@ imgs, err := client.Image.Samples(ctx, "a cat", model, image.WithN(2))
 
 | Feature | Go |
 |---------|-----|
-| CRUD collection | yes (management key required) |
-| Chunk config / metric / fields | create options + `ValidateChunkConfiguration` |
+| CRUD collection | yes (management key required); `ListAll` auto-pages |
+| Chunk config / metric / fields | create options + `ChunkByChars` / `ChunkByTokens` / `ChunkByBytes` + `ValidateChunkConfiguration` |
 | Field definition helpers | `FieldDefinition`, `AddFieldDefinition`, `DeleteFieldDefinition` |
-| Documents add/list/get/remove/batch get/reindex | yes |
+| Documents add/list/get/remove/batch get/reindex | yes; `ListAllDocuments` auto-pages |
 | Upload path → add → optional wait | `UploadDocument` |
 | Delete orphan file if add fails | `WithDeleteOnAddFailure` (opt-in) |
 | Update document | `UpdateDocument` + options |
@@ -398,8 +405,8 @@ imgs, err := client.Image.Samples(ctx, "a cat", model, image.WithN(2))
 
 | Go package `types` | Purpose |
 |--------------------|---------|
-| Model name constants | e.g. `ModelGrok3`, image/video model ids |
-| Reasoning / service tier / tool mode / search mode / aspect | stable string constants |
+| Model name constants | e.g. `ModelGrok45Latest`, image/video model ids |
+| Reasoning / service tier / tool mode / search mode / aspect / image res / content format | stable string constants (`ImageRes1K`, `ContentFormatOriginal`, …) |
 
 Python often uses Literals / enums in typing; Go uses string constants + internal proto mapping.
 

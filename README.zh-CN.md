@@ -107,6 +107,7 @@ go run ./examples/complete    # 中英注释 · 端到端
 | **多次补全** | `Samples(ctx, chat.WithN(k))` | 不静默丢弃结果 |
 | **流式** | `StreamReader` → `Recv` / `Close` | 务必 `Close` |
 | **结构化** | `Parse(ctx, schema, &dest)` | JSON Schema |
+| **延迟补全** | `Defer` 或 `DeferStart` + `DeferGet` | 内部轮询 vs 拆分（同视频 `Start`/`Get`） |
 | **工具** | `tools.WebSearch(...) (*Tool, error)` | 主路径校验 · `Unchecked*` 逃生舱 |
 | **图像 / 视频** | `Image.Sample` · `Video.Generate` | 多图：`Samples` + `WithN` |
 

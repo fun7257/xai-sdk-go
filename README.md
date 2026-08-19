@@ -107,6 +107,7 @@ go run ./examples/complete    # annotated end-to-end walkthrough
 | **Multi completion** | `Samples(ctx, chat.WithN(k))` | Never silently drop results |
 | **Streaming** | `StreamReader` → `Recv` / `Close` | Always `Close` |
 | **Structured** | `Parse(ctx, schema, &dest)` | JSON Schema |
+| **Deferred** | `Defer` or `DeferStart` + `DeferGet` | Poll vs split (same idea as video `Start`/`Get`) |
 | **Tools** | `tools.WebSearch(...) (*Tool, error)` | Validate on primary path · `Unchecked*` escape hatch |
 | **Image / video** | `Image.Sample` · `Video.Generate` | Multi-image: `Samples` + `WithN` |
 

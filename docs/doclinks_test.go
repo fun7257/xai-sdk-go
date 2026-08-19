@@ -129,6 +129,47 @@ func TestREADMEDocMapCoversCoreRoles(t *testing.T) {
 	}
 }
 
+// 0.2–0.3 preferred APIs must appear in the consumer-facing guides so they
+// cannot drift behind docs/API.md again.
+func TestPreferredAPIsStayDocumentedAcrossGuides(t *testing.T) {
+	root := findModuleRoot(t)
+	needles := map[string][]string{
+		"docs/GUIDE.zh-en.md": {
+			"DeferStart", "DeferGet", "Named", "AttachmentSearch",
+			"ListAll", "WithContentFormat", "ChunkByChars",
+		},
+		"docs/API.md": {
+			"DeferStart", "DeferGet", "Named", "AttachmentSearch",
+			"ListAll", "WithContentFormat", "ChunkByChars",
+		},
+		"docs/PARITY.md": {
+			"DeferStart", "DeferGet", "AttachmentSearch",
+		},
+		"docs/DIFF.md": {
+			"DeferStart", "DeferGet", "Named", "AttachmentSearch",
+			"ListAll", "WithContentFormat", "ChunkByChars",
+		},
+		"README.md": {
+			"DeferStart", "DeferGet",
+		},
+		"README.zh-CN.md": {
+			"DeferStart", "DeferGet",
+		},
+	}
+	for rel, list := range needles {
+		data, err := os.ReadFile(filepath.Join(root, rel))
+		if err != nil {
+			t.Fatalf("read %s: %v", rel, err)
+		}
+		s := string(data)
+		for _, n := range list {
+			if !strings.Contains(s, n) {
+				t.Errorf("%s missing preferred API %q", rel, n)
+			}
+		}
+	}
+}
+
 // Each topic has one primary home; secondary files should not re-list full make gate blocks.
 func TestQualityGatesSingleSourcedInContributing(t *testing.T) {
 	root := findModuleRoot(t)
